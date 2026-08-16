@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Third API Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="shell">
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-mark">3A</div>
+            <strong>Third API</strong>
+        </div>
+        <nav class="nav" aria-label="主导航">
+            <button class="nav-item active" data-view="apps"><i data-lucide="radio"></i><span>应用</span></button>
+            <button class="nav-item" data-view="providers"><i data-lucide="building-2"></i><span>服务商</span></button>
+            <button class="nav-item" data-view="channels"><i data-lucide="link"></i><span>渠道</span></button>
+            <button class="nav-item" data-view="endpoints"><i data-lucide="file-code"></i><span>接口</span></button>
+            <button class="nav-item" data-view="auth"><i data-lucide="key-round"></i><span>鉴权</span></button>
+            <button class="nav-item" data-view="health"><i data-lucide="activity"></i><span>健康</span></button>
+            <button class="nav-item" data-view="audit"><i data-lucide="shield-check"></i><span>审计</span></button>
+        </nav>
+        <div class="sidebar-foot">
+            <button class="nav-item" data-view="refresh"><i data-lucide="refresh-cw"></i><span>刷新数据</span></button>
+        </div>
+    </aside>
+
+    <main class="main">
+        <header class="topbar">
+            <div>
+                <div class="breadcrumb">控制台 / <strong id="viewTitle">应用</strong></div>
+                <h1 id="pageTitle">应用管理</h1>
+            </div>
+            <div class="top-actions">
+                <button class="btn ghost" id="refreshBtn"><i data-lucide="refresh-cw"></i>刷新</button>
+                <button class="btn primary" id="createBtn"><i data-lucide="plus"></i><span id="createBtnText">新增应用</span></button>
+            </div>
+        </header>
+
+        <section id="view-apps" class="view">
+            <div class="panel">
+                <div class="panel-head">
+                    <h2>应用列表</h2>
+                    <span class="muted" id="appsCount"></span>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>App ID</th>
+                            <th>名称</th>
+                            <th>密钥</th>
+                            <th>启用</th>
+                            <th>操作</th>
+                        </tr>
+                        </thead>
+                        <tbody id="appsBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section id="view-providers" class="view" hidden>
+            <div class="panel">
+                <div class="panel-head">
+                    <h2>服务商列表</h2>
+                    <span class="muted" id="providersCount"></span>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>编码</th>
+                            <th>名称</th>
+                            <th>分类</th>
+                            <th>启用</th>
+                            <th>操作</th>
+                        </tr>
+                        </thead>
+                        <tbody id="providersBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section id="view-channels" class="view" hidden>
+            <div class="panel">
+                <div class="panel-head">
+                    <h2>渠道列表</h2>
+                    <span class="muted" id="channelsCount"></span>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>服务商</th>
+                            <th>编码</th>
+                            <th>名称</th>
+                            <th>Base URL</th>
+                            <th>环境</th>
+                            <th>启用</th>
+                            <th>操作</th>
+                        </tr>
+                        </thead>
+                        <tbody id="channelsBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section id="view-endpoints" class="view" hidden>
+            <div class="panel">
+                <div class="panel-head">
+                    <h2>接口列表</h2>
+                    <select id="channelSelect" class="select"></select>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>编码</th>
+                            <th>名称</th>
+                            <th>方法</th>
+                            <th>路径</th>
+                            <th>超时</th>
+                            <th>重试</th>
+                            <th>启用</th>
+                            <th>操作</th>
+                        </tr>
+                        </thead>
+                        <tbody id="endpointsBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section id="view-auth" class="view" hidden>
+            <div class="panel">
+                <div class="panel-head">
+                    <h2>鉴权配置</h2>
+                    <select id="authChannelSelect" class="select"></select>
+                </div>
+                <div class="form-grid" id="authForm">
+                    <div class="field"><label>鉴权类型</label>
+                        <select name="authType" id="authType">
+                            <option value="NONE">NONE</option>
+                            <option value="API_KEY">API Key</option>
+                            <option value="BASIC">Basic</option>
+                            <option value="OAUTH2">OAuth2</option>
+                            <option value="SIGN">签名</option>
+                        </select>
+                    </div>
+                    <div class="field"><label>Token URL</label><input name="tokenUrl" id="authTokenUrl"></div>
+                    <div class="field"><label>Client ID</label><input name="clientId" id="authClientId"></div>
+                    <div class="field"><label>Client Secret</label><input name="clientSecret" id="authClientSecret"></div>
+                    <div class="field"><label>Token 缓存秒数</label><input name="tokenCacheTtlSeconds" id="authTtl" type="number"></div>
+                    <div class="field"><label>启用</label>
+                        <select name="enabled" id="authEnabled">
+                            <option value="true">启用</option>
+                            <option value="false">停用</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="panel-foot">
+                    <button class="btn primary" id="saveAuthBtn"><i data-lucide="save"></i>保存鉴权</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="view-health" class="view" hidden>
+            <div class="panel">
+                <div class="panel-head">
+                    <h2>健康监测</h2>
+                    <select id="healthChannelSelect" class="select"></select>
+                    <button class="btn primary" id="runHealthBtn"><i data-lucide="play"></i>运行检查</button>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>渠道</th>
+                            <th>接口</th>
+                            <th>目标</th>
+                            <th>状态</th>
+                            <th>耗时</th>
+                            <th>时间</th>
+                        </tr>
+                        </thead>
+                        <tbody id="healthBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section id="view-audit" class="view" hidden>
+            <div class="panel">
+                <div class="panel-head">
+                    <h2>审计日志</h2>
+                    <span class="muted" id="auditCount"></span>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>操作人</th>
+                            <th>动作</th>
+                            <th>对象</th>
+                            <th>对象 ID</th>
+                            <th>变更</th>
+                            <th>时间</th>
+                        </tr>
+                        </thead>
+                        <tbody id="auditBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<div class="modal" id="modal" hidden>
+    <div class="modal-card">
+        <div class="modal-head">
+            <h2 id="modalTitle">编辑</h2>
+            <button class="icon-btn" id="modalClose" aria-label="关闭"><i data-lucide="x"></i></button>
+        </div>
+        <div class="modal-body" id="modalBody"></div>
+        <div class="modal-foot">
+            <button class="btn ghost" id="modalCancel">取消</button>
+            <button class="btn primary" id="modalSave">保存</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

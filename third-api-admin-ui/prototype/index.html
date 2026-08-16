@@ -1,0 +1,2473 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Third API Console Prototype</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&amp;family=Fira+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #020617;
+            --surface: #0b1220;
+            --surface-2: #0f172a;
+            --border: #1e293b;
+            --text: #f1f5f9;
+            --muted: #94a3b8;
+            --accent: #22c55e;
+            --accent-2: #38bdf8;
+            --warn: #f59e0b;
+            --danger: #ef4444;
+            --radius: 8px;
+            --font-sans: "Fira Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            --font-mono: "Fira Code", ui-monospace, SFMono-Regular, Menlo, monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+
+        html,
+        body {
+            margin: 0;
+            min-height: 100%;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--font-sans);
+            font-size: 15px;
+            line-height: 1.5;
+            letter-spacing: 0;
+        }
+
+        body[data-variant="B"] {
+            background: #f6f7f9;
+            color: #0f172a;
+        }
+
+        button,
+        input,
+        select {
+            font: inherit;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        button:focus-visible,
+        input:focus-visible,
+        select:focus-visible,
+        a:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        .skip-link {
+            position: fixed;
+            left: 12px;
+            top: -60px;
+            z-index: 100;
+            background: var(--accent);
+            color: #03120b;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: top 160ms ease;
+        }
+
+        .skip-link:focus {
+            top: 12px;
+        }
+
+        .variant {
+            min-height: 100vh;
+        }
+
+        .icon-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            min-width: 36px;
+            border: 1px solid transparent;
+            border-radius: var(--radius);
+            background: transparent;
+            color: var(--muted);
+            transition: background 160ms ease, color 160ms ease, border-color 160ms ease;
+        }
+
+        .icon-btn:hover {
+            background: var(--surface-2);
+            color: var(--text);
+        }
+
+        .icon-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            height: 36px;
+            padding: 0 14px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text);
+            font-size: 13px;
+            font-weight: 500;
+            white-space: nowrap;
+            transition: background 160ms ease, border-color 160ms ease, transform 120ms ease;
+        }
+
+        .btn:hover {
+            border-color: var(--accent);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #03120b;
+            font-weight: 600;
+        }
+
+        .btn-primary:hover {
+            filter: brightness(1.08);
+        }
+
+        .mono {
+            font-family: var(--font-mono);
+        }
+
+        .muted {
+            color: var(--muted);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            min-width: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .status-dot.up {
+            background: var(--accent);
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+        }
+
+        .status-dot.degraded {
+            background: var(--warn);
+        }
+
+        .status-dot.down {
+            background: var(--danger);
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            height: 24px;
+            padding: 0 9px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .pill.green {
+            color: var(--accent);
+            border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+        }
+
+        .pill.red {
+            color: var(--danger);
+            border-color: color-mix(in srgb, var(--danger) 35%, transparent);
+        }
+
+        .pill.amber {
+            color: var(--warn);
+            border-color: color-mix(in srgb, var(--warn) 35%, transparent);
+        }
+
+        /* Variant A: command center */
+        .variant-a {
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .a-shell {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .a-rail {
+            width: 64px;
+            min-width: 64px;
+            border-right: 1px solid var(--border);
+            background: var(--surface);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 0;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+        }
+
+        .a-logo {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            background: var(--accent);
+            color: #03120b;
+            display: grid;
+            place-items: center;
+            font-family: var(--font-mono);
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: 14px;
+        }
+
+        .a-rail-spacer {
+            flex: 1;
+        }
+
+        .a-main {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .a-topbar {
+            height: 60px;
+            border-bottom: 1px solid var(--border);
+            background: color-mix(in srgb, var(--surface) 85%, transparent);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 0 22px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            backdrop-filter: blur(10px);
+        }
+
+        .a-search {
+            flex: 1;
+            max-width: 420px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            height: 36px;
+            padding: 0 12px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--surface-2);
+        }
+
+        .a-search svg {
+            width: 16px;
+            height: 16px;
+            color: var(--muted);
+        }
+
+        .a-search input {
+            flex: 1;
+            border: 0;
+            outline: 0;
+            background: transparent;
+            color: var(--text);
+            font-size: 13px;
+        }
+
+        .a-search input::placeholder {
+            color: var(--muted);
+        }
+
+        .a-seg {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--surface);
+            padding: 3px;
+        }
+
+        .a-seg button {
+            height: 28px;
+            padding: 0 12px;
+            border: 0;
+            border-radius: 5px;
+            background: transparent;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .a-seg button.active {
+            background: var(--surface-2);
+            color: var(--text);
+        }
+
+        .a-health-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: auto;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .a-content {
+            padding: 22px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .a-title-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .a-title-row h1 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .a-title-actions {
+            margin-left: auto;
+            display: flex;
+            gap: 8px;
+        }
+
+        .a-kpis {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .kpi {
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--surface);
+            padding: 14px;
+            min-width: 0;
+        }
+
+        .kpi-label {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: var(--muted);
+            font-size: 12px;
+            gap: 8px;
+        }
+
+        .kpi-label svg {
+            width: 15px;
+            height: 15px;
+        }
+
+        .kpi-value {
+            margin-top: 10px;
+            font-family: var(--font-mono);
+            font-size: 24px;
+            font-weight: 600;
+            line-height: 1;
+        }
+
+        .kpi-delta {
+            margin-top: 8px;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .kpi-delta .up {
+            color: var(--accent);
+        }
+
+        .kpi-delta .down {
+            color: var(--danger);
+        }
+
+        .a-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.55fr) minmax(280px, 1fr);
+            grid-template-areas:
+                "chart providers"
+                "channels events";
+            gap: 12px;
+            align-items: start;
+        }
+
+        .panel {
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--surface);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            height: 48px;
+            padding: 0 14px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .panel-header h2 {
+            margin: 0;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .panel-header .spacer {
+            flex: 1;
+        }
+
+        .panel-header .muted {
+            font-size: 12px;
+        }
+
+        .chart-panel {
+            grid-area: chart;
+        }
+
+        .chart-wrap {
+            padding: 12px 14px 10px;
+            position: relative;
+        }
+
+        .chart-legend {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 10px;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .chart-legend span {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-line {
+            width: 16px;
+            height: 3px;
+            border-radius: 2px;
+            background: var(--accent);
+        }
+
+        .legend-line.blue {
+            background: var(--accent-2);
+        }
+
+        .chart-svg {
+            width: 100%;
+            height: 210px;
+            display: block;
+        }
+
+        .chart-grid line {
+            stroke: var(--border);
+            stroke-width: 1;
+        }
+
+        .chart-area {
+            fill: url("#aAreaGradient");
+        }
+
+        .chart-area.blue {
+            fill: url("#aAreaGradientBlue");
+        }
+
+        .chart-line {
+            fill: none;
+            stroke: var(--accent);
+            stroke-width: 2;
+        }
+
+        .chart-line.blue {
+            stroke: var(--accent-2);
+            stroke-dasharray: 5 4;
+        }
+
+        .chart-point {
+            fill: var(--surface);
+            stroke: var(--danger);
+            stroke-width: 2;
+        }
+
+        .chart-tooltip {
+            position: absolute;
+            top: 64px;
+            left: 72%;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--surface-2);
+            padding: 8px 10px;
+            font-size: 12px;
+            pointer-events: none;
+        }
+
+        .chart-tooltip strong {
+            font-family: var(--font-mono);
+            font-size: 15px;
+        }
+
+        .providers-panel {
+            grid-area: providers;
+        }
+
+        .provider-list {
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .provider-row {
+            display: grid;
+            grid-template-columns: 30px minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 8px;
+            border-radius: 6px;
+            transition: background 150ms ease;
+        }
+
+        .provider-row:hover {
+            background: var(--surface-2);
+        }
+
+        .provider-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 7px;
+            display: grid;
+            place-items: center;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            color: var(--muted);
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .provider-main {
+            min-width: 0;
+        }
+
+        .provider-name {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .provider-meta {
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .provider-bar {
+            width: 64px;
+            height: 4px;
+            border-radius: 2px;
+            background: var(--surface-2);
+            overflow: hidden;
+        }
+
+        .provider-bar span {
+            display: block;
+            height: 100%;
+            border-radius: 2px;
+            background: var(--accent);
+        }
+
+        .channels-panel {
+            grid-area: channels;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .data-table th {
+            height: 40px;
+            padding: 0 14px;
+            text-align: left;
+            color: var(--muted);
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+            background: color-mix(in srgb, var(--surface) 70%, var(--surface-2));
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+        .data-table td {
+            height: 48px;
+            padding: 0 14px;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+        .data-table tbody tr:last-child td {
+            border-bottom: 0;
+        }
+
+        .data-table tbody tr {
+            transition: background 140ms ease;
+        }
+
+        .data-table tbody tr:hover {
+            background: var(--surface-2);
+        }
+
+        .cell-name {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+        }
+
+        .cell-name .mono {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .code-block {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: var(--accent-2);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 190px;
+            display: block;
+        }
+
+        .row-actions {
+            display: flex;
+            gap: 2px;
+        }
+
+        .events-panel {
+            grid-area: events;
+        }
+
+        .event-list {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .event-item {
+            display: grid;
+            grid-template-columns: 30px minmax(0, 1fr) auto;
+            gap: 10px;
+            align-items: start;
+            padding: 11px 14px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .event-item:last-child {
+            border-bottom: 0;
+        }
+
+        .event-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 7px;
+            display: grid;
+            place-items: center;
+            border: 1px solid var(--border);
+            background: var(--surface-2);
+        }
+
+        .event-icon svg {
+            width: 15px;
+            height: 15px;
+        }
+
+        .event-icon.red {
+            color: var(--danger);
+        }
+
+        .event-icon.blue {
+            color: var(--accent-2);
+        }
+
+        .event-title {
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .event-desc {
+            margin-top: 2px;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .event-time {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        /* Variant B: service desk */
+        .variant-b {
+            --bg: #f6f7f9;
+            --surface: #ffffff;
+            --surface-2: #f1f5f9;
+            --border: #e2e8f0;
+            --text: #0f172a;
+            --muted: #64748b;
+            --accent: #2563eb;
+            --accent-2: #0891b2;
+            --warn: #d97706;
+            --danger: #dc2626;
+        }
+
+        .b-shell {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .b-sidebar {
+            width: 232px;
+            min-width: 232px;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 16px 12px;
+            gap: 4px;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+        }
+
+        .b-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 4px 8px 18px;
+        }
+
+        .b-logo {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            background: var(--accent);
+            color: #fff;
+            display: grid;
+            place-items: center;
+            font-family: var(--font-mono);
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        .b-brand strong {
+            font-size: 14px;
+        }
+
+        .b-nav-group {
+            color: var(--muted);
+            font-size: 11px;
+            padding: 14px 10px 6px;
+            letter-spacing: 0.05em;
+        }
+
+        .b-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            height: 38px;
+            padding: 0 10px;
+            border-radius: 6px;
+            color: var(--muted);
+            border: 0;
+            background: transparent;
+            font-size: 13px;
+            text-align: left;
+            width: 100%;
+            transition: background 140ms ease, color 140ms ease;
+        }
+
+        .b-nav-item svg {
+            width: 17px;
+            height: 17px;
+        }
+
+        .b-nav-item:hover {
+            background: var(--surface-2);
+            color: var(--text);
+        }
+
+        .b-nav-item.active {
+            background: color-mix(in srgb, var(--accent) 10%, transparent);
+            color: var(--accent);
+            font-weight: 500;
+        }
+
+        .b-sidebar-footer {
+            margin-top: auto;
+            border-top: 1px solid var(--border);
+            padding: 12px 6px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .b-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #1e293b;
+            color: #fff;
+            display: grid;
+            place-items: center;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .b-main {
+            flex: 1;
+            min-width: 0;
+            padding: 0 26px 28px;
+        }
+
+        .b-topbar {
+            height: 64px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            background: color-mix(in srgb, var(--bg) 90%, transparent);
+            backdrop-filter: blur(8px);
+            z-index: 10;
+        }
+
+        .b-breadcrumb {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .b-breadcrumb strong {
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        .b-topbar-right {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .b-page-header {
+            display: flex;
+            align-items: flex-end;
+            gap: 14px;
+            padding: 24px 0 18px;
+            flex-wrap: wrap;
+        }
+
+        .b-page-header h1 {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 600;
+        }
+
+        .b-page-header .sub {
+            color: var(--muted);
+            font-size: 13px;
+            margin-top: 4px;
+        }
+
+        .b-header-actions {
+            margin-left: auto;
+            display: flex;
+            gap: 8px;
+        }
+
+        .b-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 320px;
+            gap: 16px;
+            align-items: start;
+        }
+
+        .b-panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
+        .b-filter-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+        }
+
+        .b-search {
+            flex: 1;
+            min-width: 180px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            height: 34px;
+            padding: 0 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--surface);
+        }
+
+        .b-search svg {
+            width: 15px;
+            height: 15px;
+            color: var(--muted);
+        }
+
+        .b-search input {
+            flex: 1;
+            border: 0;
+            outline: 0;
+            background: transparent;
+            color: var(--text);
+            font-size: 13px;
+        }
+
+        .b-select {
+            height: 34px;
+            padding: 0 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--surface);
+            color: var(--text);
+            font-size: 12px;
+        }
+
+        .b-seg {
+            display: inline-flex;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--surface);
+            padding: 3px;
+        }
+
+        .b-seg button {
+            height: 26px;
+            padding: 0 12px;
+            border: 0;
+            border-radius: 4px;
+            background: transparent;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .b-seg button.active {
+            background: color-mix(in srgb, var(--accent) 12%, transparent);
+            color: var(--accent);
+            font-weight: 500;
+        }
+
+        .b-table-wrap {
+            overflow-x: auto;
+        }
+
+        .b-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            min-width: 860px;
+        }
+
+        .b-table th {
+            height: 40px;
+            padding: 0 14px;
+            text-align: left;
+            color: var(--muted);
+            font-size: 11px;
+            font-weight: 500;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface-2);
+            white-space: nowrap;
+        }
+
+        .b-table td {
+            height: 54px;
+            padding: 0 14px;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+        .b-table tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        .b-channel-cell {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .b-channel-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            display: grid;
+            place-items: center;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            color: var(--muted);
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .b-toggle {
+            position: relative;
+            width: 34px;
+            height: 20px;
+            border-radius: 999px;
+            border: 0;
+            background: #cbd5e1;
+            transition: background 160ms ease;
+        }
+
+        .b-toggle::after {
+            content: "";
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #fff;
+            transition: transform 160ms ease;
+        }
+
+        .b-toggle.on {
+            background: var(--accent);
+        }
+
+        .b-toggle.on::after {
+            transform: translateX(14px);
+        }
+
+        .b-release-panel {
+            position: sticky;
+            top: 80px;
+        }
+
+        .b-release-head {
+            padding: 14px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .b-release-head h2 {
+            margin: 0;
+            font-size: 14px;
+        }
+
+        .b-release-body {
+            padding: 12px 14px;
+        }
+
+        .b-release-item {
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 8px;
+            background: var(--surface-2);
+        }
+
+        .b-release-item .top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .b-release-item .diff {
+            margin-top: 6px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .b-diff-tag {
+            font-size: 11px;
+            padding: 2px 7px;
+            border-radius: 999px;
+            background: color-mix(in srgb, var(--accent) 14%, transparent);
+            color: var(--accent);
+        }
+
+        .b-gray-row {
+            margin: 14px 0 8px;
+        }
+
+        .b-gray-row label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 8px;
+        }
+
+        .b-gray-row input[type="range"] {
+            width: 100%;
+            accent-color: var(--accent);
+        }
+
+        .b-release-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .b-release-actions .btn {
+            flex: 1;
+        }
+
+        .b-history {
+            margin-top: 14px;
+            border-top: 1px solid var(--border);
+            padding-top: 12px;
+        }
+
+        .b-history h3 {
+            margin: 0 0 8px;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .b-history-item {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 7px 0;
+            font-size: 12px;
+            border-bottom: 1px dashed var(--border);
+        }
+
+        .b-history-item:last-child {
+            border-bottom: 0;
+        }
+
+        /* Variant C: traffic control */
+        .variant-c {
+            --surface-3: #0e1626;
+        }
+
+        .c-shell {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .c-topbar {
+            height: 58px;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 0 18px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .c-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .c-brand-mark {
+            width: 30px;
+            height: 30px;
+            border-radius: 7px;
+            background: var(--accent);
+            color: #03120b;
+            display: grid;
+            place-items: center;
+            font-family: var(--font-mono);
+            font-weight: 700;
+        }
+
+        .c-seg {
+            display: inline-flex;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--surface-2);
+            padding: 3px;
+        }
+
+        .c-seg button {
+            height: 26px;
+            padding: 0 12px;
+            border: 0;
+            background: transparent;
+            color: var(--muted);
+            font-size: 12px;
+            border-radius: 4px;
+        }
+
+        .c-seg button.active {
+            background: var(--surface);
+            color: var(--text);
+        }
+
+        .c-topbar-right {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .c-content {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .c-title-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .c-title-row h1 {
+            margin: 0;
+            font-size: 19px;
+            font-weight: 600;
+        }
+
+        .c-pipeline {
+            display: grid;
+            grid-template-columns: minmax(220px, 0.8fr) minmax(320px, 1.3fr) minmax(280px, 1fr);
+            gap: 14px;
+            align-items: start;
+        }
+
+        .c-col {
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--surface);
+            overflow: hidden;
+        }
+
+        .c-col-head {
+            height: 44px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0 14px;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface-2);
+        }
+
+        .c-col-head h2 {
+            margin: 0;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .c-col-head .count {
+            margin-left: auto;
+            color: var(--muted);
+            font-size: 12px;
+            font-family: var(--font-mono);
+        }
+
+        .c-entry-list,
+        .c-channel-list {
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .c-entry {
+            display: grid;
+            grid-template-columns: 34px minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 8px;
+            border-radius: 6px;
+            border: 1px solid transparent;
+            text-align: left;
+            transition: background 140ms ease, border-color 140ms ease;
+        }
+
+        .c-entry:hover {
+            background: var(--surface-2);
+        }
+
+        .c-entry.active {
+            border-color: var(--accent);
+            background: color-mix(in srgb, var(--accent) 8%, transparent);
+        }
+
+        .c-entry-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 7px;
+            display: grid;
+            place-items: center;
+            border: 1px solid var(--border);
+            background: var(--surface-2);
+        }
+
+        .c-entry-icon svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .c-entry-main {
+            min-width: 0;
+        }
+
+        .c-entry-name {
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .c-entry-meta {
+            margin-top: 2px;
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .c-traffic {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--accent);
+        }
+
+        .c-endpoint-body {
+            padding: 14px;
+        }
+
+        .c-method-path {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .c-method {
+            height: 26px;
+            padding: 0 10px;
+            border-radius: 5px;
+            background: color-mix(in srgb, var(--accent-2) 16%, transparent);
+            color: var(--accent-2);
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .c-path {
+            font-family: var(--font-mono);
+            font-size: 13px;
+            color: var(--text);
+        }
+
+        .c-field {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 10px 0;
+            border-top: 1px solid var(--border);
+            font-size: 13px;
+        }
+
+        .c-field .label {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .c-field .value {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: var(--text);
+        }
+
+        .c-tag-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            padding: 10px 0;
+            border-top: 1px solid var(--border);
+        }
+
+        .c-channel {
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            padding: 12px;
+            background: var(--surface-2);
+            margin: 6px;
+        }
+
+        .c-channel-top {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .c-channel-top .name {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .c-channel-top .code {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .c-channel-top .health {
+            margin-left: auto;
+        }
+
+        .c-channel-meta {
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .c-channel-meta .mono {
+            color: var(--text);
+        }
+
+        .c-token-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed var(--border);
+        }
+
+        .c-token-row .label {
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .c-logs-panel {
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--surface);
+            overflow: hidden;
+        }
+
+        .c-logs-head {
+            height: 44px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0 14px;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface-2);
+        }
+
+        .c-logs-head h2 {
+            margin: 0;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .c-live-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--accent);
+            animation: c-pulse 1.6s ease-in-out infinite;
+        }
+
+        @keyframes c-pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.35; }
+        }
+
+        .c-logs-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .c-logs-table th {
+            height: 36px;
+            padding: 0 14px;
+            text-align: left;
+            color: var(--muted);
+            font-size: 11px;
+            font-weight: 500;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .c-logs-table td {
+            height: 38px;
+            padding: 0 14px;
+            border-bottom: 1px solid var(--border);
+            font-family: var(--font-mono);
+            font-size: 11px;
+        }
+
+        .c-logs-table tr:last-child td {
+            border-bottom: 0;
+        }
+
+        .c-logs-table .ok {
+            color: var(--accent);
+        }
+
+        .c-logs-table .err {
+            color: var(--danger);
+        }
+
+        /* prototype switcher */
+        .proto-switcher {
+            position: fixed;
+            left: 50%;
+            bottom: 18px;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            height: 44px;
+            padding: 0 8px;
+            border-radius: 999px;
+            background: #111827;
+            border: 1px solid #374151;
+            color: #e5e7eb;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+            z-index: 999;
+        }
+
+        .proto-switcher button {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            border: 0;
+            background: #1f2937;
+            color: #e5e7eb;
+            display: grid;
+            place-items: center;
+            transition: background 140ms ease;
+        }
+
+        .proto-switcher button:hover {
+            background: #374151;
+        }
+
+        .proto-switcher svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .proto-switcher span {
+            min-width: 176px;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 600;
+            font-family: var(--font-mono);
+            white-space: nowrap;
+        }
+
+        @media (max-width: 1180px) {
+            .a-kpis {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+
+            .a-grid {
+                grid-template-columns: minmax(0, 1fr);
+                grid-template-areas:
+                    "chart"
+                    "providers"
+                    "channels"
+                    "events";
+            }
+
+            .b-grid {
+                grid-template-columns: minmax(0, 1fr);
+            }
+
+            .b-release-panel {
+                position: static;
+            }
+
+            .c-pipeline {
+                grid-template-columns: minmax(0, 1fr);
+            }
+        }
+
+        @media (max-width: 720px) {
+            .a-rail {
+                display: none;
+            }
+
+            .a-topbar,
+            .b-topbar {
+                padding: 0 12px;
+                gap: 8px;
+            }
+
+            .a-health-pill span:not(.status-dot) {
+                display: none;
+            }
+
+            .a-content,
+            .c-content {
+                padding: 14px;
+            }
+
+            .a-kpis {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .a-title-actions .btn {
+                padding: 0 10px;
+            }
+
+            .b-main {
+                padding: 0 14px 24px;
+            }
+
+            .b-sidebar {
+                width: 64px;
+                min-width: 64px;
+                padding: 12px 8px;
+            }
+
+            .b-brand strong,
+            .b-nav-item span,
+            .b-nav-group,
+            .b-sidebar-footer .meta {
+                display: none;
+            }
+
+            .b-nav-item {
+                justify-content: center;
+                padding: 0;
+            }
+
+            .b-page-header {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .b-header-actions {
+                margin-left: 0;
+                width: 100%;
+            }
+
+            .b-header-actions .btn {
+                flex: 1;
+            }
+
+            .proto-switcher span {
+                min-width: 0;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body data-variant="A">
+<a class="skip-link" href="#main">跳到主要内容</a>
+<main id="main">
+
+    <!-- Variant A: Command Center -->
+    <section class="variant variant-a" data-variant="A">
+        <div class="a-shell">
+            <aside class="a-rail" aria-label="主导航">
+                <div class="a-logo">3A</div>
+                <button class="icon-btn" title="总览" aria-label="总览"><i data-lucide="layout-dashboard"></i></button>
+                <button class="icon-btn" title="服务商" aria-label="服务商"><i data-lucide="building-2"></i></button>
+                <button class="icon-btn" title="渠道" aria-label="渠道"><i data-lucide="radio"></i></button>
+                <button class="icon-btn" title="接口" aria-label="接口"><i data-lucide="link"></i></button>
+                <button class="icon-btn" title="策略" aria-label="策略"><i data-lucide="sliders-horizontal"></i></button>
+                <button class="icon-btn" title="调用日志" aria-label="调用日志"><i data-lucide="scroll-text"></i></button>
+                <div class="a-rail-spacer"></div>
+                <button class="icon-btn" title="设置" aria-label="设置"><i data-lucide="settings"></i></button>
+            </aside>
+
+            <div class="a-main">
+                <header class="a-topbar">
+                    <label class="a-search">
+                        <i data-lucide="search"></i>
+                        <input type="search" placeholder="搜索接口、渠道、TraceID">
+                    </label>
+                    <div class="a-seg" role="group" aria-label="环境">
+                        <button>dev</button>
+                        <button>test</button>
+                        <button class="active">prod</button>
+                    </div>
+                    <div class="a-health-pill">
+                        <span class="status-dot up" aria-hidden="true"></span>
+                        <span>全部系统正常</span>
+                    </div>
+                    <button class="icon-btn" title="告警" aria-label="告警"><i data-lucide="bell"></i></button>
+                    <button class="icon-btn" title="账号" aria-label="账号"><i data-lucide="user"></i></button>
+                </header>
+
+                <div class="a-content">
+                    <div class="a-title-row">
+                        <h1>接口运行总览</h1>
+                        <span class="pill"><i data-lucide="activity" style="width:13px;height:13px"></i>实时</span>
+                        <div class="a-title-actions">
+                            <button class="btn"><i data-lucide="pause"></i>暂停告警</button>
+                            <button class="btn btn-primary"><i data-lucide="plus"></i>新建探测</button>
+                        </div>
+                    </div>
+
+                    <div class="a-kpis">
+                        <div class="kpi">
+                            <div class="kpi-label">今日调用量 <i data-lucide="trending-up"></i></div>
+                            <div class="kpi-value">12.8M</div>
+                            <div class="kpi-delta"><span class="up">+12.4%</span> 较昨日</div>
+                        </div>
+                        <div class="kpi">
+                            <div class="kpi-label">成功率 <i data-lucide="circle-check"></i></div>
+                            <div class="kpi-value">99.21%</div>
+                            <div class="kpi-delta"><span class="up">+0.06pp</span> 近 24h</div>
+                        </div>
+                        <div class="kpi">
+                            <div class="kpi-label">P95 延迟 <i data-lucide="clock-3"></i></div>
+                            <div class="kpi-value">186ms</div>
+                            <div class="kpi-delta"><span class="up">-8ms</span> 近 24h</div>
+                        </div>
+                        <div class="kpi">
+                            <div class="kpi-label">异常渠道 <i data-lucide="triangle-alert"></i></div>
+                            <div class="kpi-value">2</div>
+                            <div class="kpi-delta"><span class="down">1 DOWN</span> · 1 DEGRADED</div>
+                        </div>
+                        <div class="kpi">
+                            <div class="kpi-label">启用接口 <i data-lucide="plug"></i></div>
+                            <div class="kpi-value">48</div>
+                            <div class="kpi-delta">6 个服务商</div>
+                        </div>
+                    </div>
+
+                    <div class="a-grid">
+                        <section class="panel chart-panel" aria-labelledby="chart-title">
+                            <div class="panel-header">
+                                <h2 id="chart-title">调用量与成功率</h2>
+                                <span class="muted">最近 24h</span>
+                                <div class="spacer"></div>
+                                <button class="icon-btn" title="暂停刷新" aria-label="暂停刷新"><i data-lucide="pause"></i></button>
+                                <button class="icon-btn" title="更多" aria-label="更多"><i data-lucide="more-horizontal"></i></button>
+                            </div>
+                            <div class="chart-wrap">
+                                <div class="chart-legend">
+                                    <span><i class="legend-line"></i>调用量</span>
+                                    <span><i class="legend-line blue"></i>成功率</span>
+                                    <span>当前 99.21%</span>
+                                </div>
+                                <svg class="chart-svg" viewBox="0 0 720 210" role="img" aria-label="调用量与成功率趋势图">
+                                    <defs>
+                                        <linearGradient id="aAreaGradient" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stop-color="#22c55e" stop-opacity="0.32"/>
+                                            <stop offset="100%" stop-color="#22c55e" stop-opacity="0"/>
+                                        </linearGradient>
+                                        <linearGradient id="aAreaGradientBlue" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.28"/>
+                                            <stop offset="100%" stop-color="#38bdf8" stop-opacity="0"/>
+                                        </linearGradient>
+                                    </defs>
+                                    <g class="chart-grid">
+                                        <line x1="0" y1="20" x2="720" y2="20"/>
+                                        <line x1="0" y1="70" x2="720" y2="70"/>
+                                        <line x1="0" y1="120" x2="720" y2="120"/>
+                                        <line x1="0" y1="170" x2="720" y2="170"/>
+                                    </g>
+                                    <path class="chart-area" d="M0 150 C60 138 90 128 150 122 C210 116 260 128 320 108 C380 88 430 96 500 78 C560 62 620 70 720 48 L720 210 L0 210 Z"/>
+                                    <path class="chart-area blue" d="M0 132 C70 126 120 118 190 112 C260 106 330 110 400 96 C470 82 540 74 720 58 L720 210 L0 210 Z"/>
+                                    <path class="chart-line" d="M0 150 C60 138 90 128 150 122 C210 116 260 128 320 108 C380 88 430 96 500 78 C560 62 620 70 720 48"/>
+                                    <path class="chart-line blue" d="M0 132 C70 126 120 118 190 112 C260 106 330 110 400 96 C470 82 540 74 720 58"/>
+                                    <circle class="chart-point" cx="500" cy="78" r="4"/>
+                                </svg>
+                                <div class="chart-tooltip">
+                                    <div class="muted">14:32</div>
+                                    <strong>99.21%</strong> · 128.4K calls
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="panel providers-panel" aria-labelledby="providers-title">
+                            <div class="panel-header">
+                                <h2 id="providers-title">服务商健康</h2>
+                                <div class="spacer"></div>
+                                <span class="muted">6 个服务商</span>
+                            </div>
+                            <div class="provider-list">
+                                <div class="provider-row">
+                                    <div class="provider-icon">SMS</div>
+                                    <div class="provider-main">
+                                        <div class="provider-name">短信服务 <span class="status-dot up"></span></div>
+                                        <div class="provider-meta"><span>99.6%</span><div class="provider-bar"><span style="width:99.6%"></span></div><span>142ms</span></div>
+                                    </div>
+                                    <i data-lucide="arrow-up-right" style="width:15px;height:15px;color:var(--accent)"></i>
+                                </div>
+                                <div class="provider-row">
+                                    <div class="provider-icon">PAY</div>
+                                    <div class="provider-main">
+                                        <div class="provider-name">支付服务 <span class="status-dot up"></span></div>
+                                        <div class="provider-meta"><span>99.8%</span><div class="provider-bar"><span style="width:99.8%"></span></div><span>168ms</span></div>
+                                    </div>
+                                    <i data-lucide="arrow-up-right" style="width:15px;height:15px;color:var(--accent)"></i>
+                                </div>
+                                <div class="provider-row">
+                                    <div class="provider-icon">AUTH</div>
+                                    <div class="provider-main">
+                                        <div class="provider-name">鉴权服务 <span class="status-dot degraded"></span></div>
+                                        <div class="provider-meta"><span>96.2%</span><div class="provider-bar"><span style="width:96.2%;background:var(--warn)"></span></div><span>310ms</span></div>
+                                    </div>
+                                    <i data-lucide="arrow-down-right" style="width:15px;height:15px;color:var(--warn)"></i>
+                                </div>
+                                <div class="provider-row">
+                                    <div class="provider-icon">OCR</div>
+                                    <div class="provider-main">
+                                        <div class="provider-name">证件识别 <span class="status-dot up"></span></div>
+                                        <div class="provider-meta"><span>98.9%</span><div class="provider-bar"><span style="width:98.9%"></span></div><span>226ms</span></div>
+                                    </div>
+                                    <i data-lucide="arrow-up-right" style="width:15px;height:15px;color:var(--accent)"></i>
+                                </div>
+                                <div class="provider-row">
+                                    <div class="provider-icon">BANK</div>
+                                    <div class="provider-main">
+                                        <div class="provider-name">银行路由 <span class="status-dot down"></span></div>
+                                        <div class="provider-meta"><span>84.1%</span><div class="provider-bar"><span style="width:84.1%;background:var(--danger)"></span></div><span>812ms</span></div>
+                                    </div>
+                                    <i data-lucide="arrow-down-right" style="width:15px;height:15px;color:var(--danger)"></i>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="panel channels-panel" aria-labelledby="channels-title">
+                            <div class="panel-header">
+                                <h2 id="channels-title">渠道状态</h2>
+                                <div class="spacer"></div>
+                                <span class="muted">按成功率排序</span>
+                                <button class="icon-btn" title="刷新" aria-label="刷新"><i data-lucide="refresh-cw"></i></button>
+                            </div>
+                            <table class="data-table">
+                                <thead>
+                                <tr>
+                                    <th>渠道</th>
+                                    <th>环境</th>
+                                    <th>健康</th>
+                                    <th>成功率</th>
+                                    <th>延迟</th>
+                                    <th></th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                    <td><div class="cell-name"><div class="provider-icon">AS</div><div><div>阿里云短信</div><div class="mono">aliyun-sms</div></div></div></td>
+                                    <td><span class="pill">prod</span></td>
+                                    <td><span class="status-dot up"></span> UP</td>
+                                    <td>99.7%</td>
+                                    <td class="mono">138ms</td>
+                                    <td><div class="row-actions"><button class="icon-btn" title="详情" aria-label="详情"><i data-lucide="external-link"></i></button><button class="icon-btn" title="更多" aria-label="更多"><i data-lucide="more-horizontal"></i></button></div></td>
+                                </tr>
+                                <tr>
+                                    <td><div class="cell-name"><div class="provider-icon">TS</div><div><div>腾讯云短信</div><div class="mono">tencent-sms</div></div></div></td>
+                                    <td><span class="pill">prod</span></td>
+                                    <td><span class="status-dot up"></span> UP</td>
+                                    <td>99.4%</td>
+                                    <td class="mono">151ms</td>
+                                    <td><div class="row-actions"><button class="icon-btn" title="详情" aria-label="详情"><i data-lucide="external-link"></i></button><button class="icon-btn" title="更多" aria-label="更多"><i data-lucide="more-horizontal"></i></button></div></td>
+                                </tr>
+                                <tr>
+                                    <td><div class="cell-name"><div class="provider-icon">WP</div><div><div>微信支付</div><div class="mono">wechat-pay</div></div></div></td>
+                                    <td><span class="pill">prod</span></td>
+                                    <td><span class="status-dot degraded"></span> DEGRADED</td>
+                                    <td>96.2%</td>
+                                    <td class="mono">312ms</td>
+                                    <td><div class="row-actions"><button class="icon-btn" title="详情" aria-label="详情"><i data-lucide="external-link"></i></button><button class="icon-btn" title="更多" aria-label="更多"><i data-lucide="more-horizontal"></i></button></div></td>
+                                </tr>
+                                <tr>
+                                    <td><div class="cell-name"><div class="provider-icon">AL</div><div><div>支付宝</div><div class="mono">alipay</div></div></div></td>
+                                    <td><span class="pill">prod</span></td>
+                                    <td><span class="status-dot up"></span> UP</td>
+                                    <td>99.8%</td>
+                                    <td class="mono">166ms</td>
+                                    <td><div class="row-actions"><button class="icon-btn" title="详情" aria-label="详情"><i data-lucide="external-link"></i></button><button class="icon-btn" title="更多" aria-label="更多"><i data-lucide="more-horizontal"></i></button></div></td>
+                                </tr>
+                                <tr>
+                                    <td><div class="cell-name"><div class="provider-icon">BR</div><div><div>银行路由</div><div class="mono">bank-router</div></div></div></td>
+                                    <td><span class="pill">prod</span></td>
+                                    <td><span class="status-dot down"></span> DOWN</td>
+                                    <td>84.1%</td>
+                                    <td class="mono">812ms</td>
+                                    <td><div class="row-actions"><button class="icon-btn" title="详情" aria-label="详情"><i data-lucide="external-link"></i></button><button class="icon-btn" title="更多" aria-label="更多"><i data-lucide="more-horizontal"></i></button></div></td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </section>
+
+                        <section class="panel events-panel" aria-labelledby="events-title">
+                            <div class="panel-header">
+                                <h2 id="events-title">最近事件</h2>
+                                <div class="spacer"></div>
+                                <span class="muted">实时</span>
+                            </div>
+                            <div class="event-list">
+                                <div class="event-item">
+                                    <div class="event-icon red"><i data-lucide="triangle-alert"></i></div>
+                                    <div>
+                                        <div class="event-title">bank-router 连续失败 12 次</div>
+                                        <div class="event-desc">熔断已开启，命中 2 个业务接口</div>
+                                    </div>
+                                    <div class="event-time">14:32</div>
+                                </div>
+                                <div class="event-item">
+                                    <div class="event-icon blue"><i data-lucide="git-commit-horizontal"></i></div>
+                                    <div>
+                                        <div class="event-title">aliyun-sms BaseURL 已变更</div>
+                                        <div class="event-desc">版本 v42 灰度 20%</div>
+                                    </div>
+                                    <div class="event-time">13:48</div>
+                                </div>
+                                <div class="event-item">
+                                    <div class="event-icon red"><i data-lucide="shield"></i></div>
+                                    <div>
+                                        <div class="event-title">wechat-pay Token 刷新失败</div>
+                                        <div class="event-desc">2 秒后自动重试成功</div>
+                                    </div>
+                                    <div class="event-time">13:05</div>
+                                </div>
+                                <div class="event-item">
+                                    <div class="event-icon blue"><i data-lucide="refresh-cw"></i></div>
+                                    <div>
+                                        <div class="event-title">alipay 密钥已轮换</div>
+                                        <div class="event-desc">操作人：ops@corp</div>
+                                    </div>
+                                    <div class="event-time">11:20</div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Variant B: Service Desk -->
+    <section class="variant variant-b" data-variant="B" hidden>
+        <div class="b-shell">
+            <aside class="b-sidebar" aria-label="侧边导航">
+                <div class="b-brand">
+                    <div class="b-logo">3A</div>
+                    <strong>Third API</strong>
+                </div>
+                <div class="b-nav-group">管理</div>
+                <button class="b-nav-item"><i data-lucide="layout-dashboard"></i><span>总览</span></button>
+                <button class="b-nav-item"><i data-lucide="building-2"></i><span>服务商</span></button>
+                <button class="b-nav-item active"><i data-lucide="radio"></i><span>渠道</span></button>
+                <button class="b-nav-item"><i data-lucide="link"></i><span>接口</span></button>
+                <button class="b-nav-item"><i data-lucide="sliders-horizontal"></i><span>策略</span></button>
+                <div class="b-nav-group">运行</div>
+                <button class="b-nav-item"><i data-lucide="send"></i><span>配置发布</span></button>
+                <button class="b-nav-item"><i data-lucide="scroll-text"></i><span>调用日志</span></button>
+                <button class="b-nav-item"><i data-lucide="activity"></i><span>健康监测</span></button>
+                <button class="b-nav-item"><i data-lucide="shield-check"></i><span>审计</span></button>
+                <div class="b-sidebar-footer">
+                    <div class="b-avatar">WZ</div>
+                    <div class="meta"><div style="font-size:13px;font-weight:500">王兆根</div><div class="muted" style="font-size:11px">平台管理员</div></div>
+                </div>
+            </aside>
+
+            <div class="b-main">
+                <header class="b-topbar">
+                    <div class="b-breadcrumb">配置管理 / <strong>渠道管理</strong></div>
+                    <div class="b-topbar-right">
+                        <button class="icon-btn" title="搜索" aria-label="搜索"><i data-lucide="search"></i></button>
+                        <button class="icon-btn" title="通知" aria-label="通知"><i data-lucide="bell"></i></button>
+                        <button class="icon-btn" title="帮助" aria-label="帮助"><i data-lucide="circle-help"></i></button>
+                    </div>
+                </header>
+
+                <div class="b-page-header">
+                    <div>
+                        <h1>渠道管理</h1>
+                        <div class="sub">共 6 个渠道，2 个渠道有待发布变更</div>
+                    </div>
+                    <div class="b-header-actions">
+                        <button class="btn"><i data-lucide="flask-conical"></i>测试调用</button>
+                        <button class="btn"><i data-lucide="send"></i>发布配置</button>
+                        <button class="btn btn-primary"><i data-lucide="plus"></i>新建渠道</button>
+                    </div>
+                </div>
+
+                <div class="b-grid">
+                    <div class="b-panel">
+                        <div class="b-filter-bar">
+                            <label class="b-search"><i data-lucide="search"></i><input type="search" placeholder="搜索渠道名称或编码"></label>
+                            <div class="b-seg" role="group" aria-label="环境">
+                                <button>全部</button>
+                                <button>dev</button>
+                                <button>test</button>
+                                <button class="active">prod</button>
+                            </div>
+                            <select class="b-select" aria-label="状态筛选">
+                                <option>全部状态</option>
+                                <option>已启用</option>
+                                <option>已停用</option>
+                            </select>
+                            <button class="icon-btn" title="筛选" aria-label="筛选"><i data-lucide="filter"></i></button>
+                        </div>
+                        <div class="b-table-wrap">
+                            <table class="b-table">
+                                <thead>
+                                <tr>
+                                    <th style="width:36px"><input type="checkbox" aria-label="全选"></th>
+                                    <th>渠道</th>
+                                    <th>环境</th>
+                                    <th>Base URL</th>
+                                    <th>鉴权</th>
+                                    <th>启用</th>
+                                    <th>健康</th>
+                                    <th>版本</th>
+                                    <th>操作</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                    <td><input type="checkbox" aria-label="选择阿里云短信"></td>
+                                    <td>
+                                        <div class="b-channel-cell">
+                                            <div class="b-channel-icon">AS</div>
+                                            <div><div style="font-weight:500">阿里云短信</div><div class="mono muted" style="font-size:11px">aliyun-sms</div></div>
+                                        </div>
+                                    </td>
+                                    <td><span class="pill green">prod</span></td>
+                                    <td><span class="code-block">https://dysmsapi.aliyuncs.com</span></td>
+                                    <td><span class="pill">API Key</span></td>
+                                    <td><button class="b-toggle on" role="switch" aria-label="阿里云短信启用" aria-checked="true"></button></td>
+                                    <td><span class="status-dot up"></span> <span class="muted" style="font-size:12px">99.7%</span></td>
+                                    <td><span class="mono muted">v42</span></td>
+                                    <td><div class="row-actions"><button class="icon-btn" title="编辑" aria-label="编辑阿里云短信"><i data-lucide="pencil"></i></button><button class="icon-btn" title="更多" aria-label="更多"><i data-lucide="more-horizontal"></i></button></div></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="checkbox" aria-label="选择腾讯云短信"></td>
+                                    <td>
+                                        <div class="b-channel-cell">
+                                            <div class="b-channel-icon">TS</div>
+                                            <div><div style="font-weight:500">腾讯云短信</div><div class="mono muted" style="font-size:11px">tencent-sms</div></div>
+                                        </div>
+                                    </td>
+                                    <td><span class="pill green">prod</span></td>
+                                    <td><span class="code-block">https://sms.tencentcloudapi.com</span></td>
+                                    <td><span class="pill">OAuth2</span></td>
+                                    <td><button class="b-toggle on" role="switch" aria-label="腾讯云短信启用" aria-checked="true"></button></td>
+                                    <td><span class="status-dot up"></span> <span class="muted" style="font-size:12px">99.4%</span></td>
+                                    <td><span class="mono muted">v38</span></td>
+                                    <td><div class="row-actions"><button class="icon-btn" title="编辑" aria-label="编辑腾讯云短信"><i data-lucide="pencil"></i></button><button class="icon-btn" title="更多" aria-label="更多"><i data-lucide="more-horizontal"></i></button></div></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="checkbox" aria-label="选择微信支付"></td>
+                                    <td>
+                                        <div class="b-channel-cell">
+                                            <div class="b-channel-icon">WP</div>
+                                            <div><div style="font-weight:500">微信支付</div><div class="mono muted" style="font-size:11px">wechat-pay</div></div>
+                                        </div>
+                                    </td>
+                                    <td><span class="pill green">prod</span></td>
+                                    <td><span class="code-block">https://api.mch.weixin.qq.com</span></td>
+                                    <td><span class="pill">签名</span></td>
+                                    <td><button class="b-toggle on" role="switch" aria-label="微信支付启用" aria-checked="true"></button></td>
+                                    <td><span class="status-dot degraded"></span> <span class="muted" style="font-size:12px">96.2%</span></td>
+                                    <td><span class="pill amber">v45 待发</span></td>
+                                    <td><div class="row-actions"><button class="icon-btn" title="编辑" aria-label="编辑微信支付"><i data-lucide="pencil"></i></button><button class="icon-btn" title="更多" aria-label="更多"><i data-lucide="more-horizontal"></i></button></div></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="checkbox" aria-label="选择支付宝"></td>
+                                    <td>
+                                        <div class="b-channel-cell">
+                                            <div class="b-channel-icon">AL</div>
+                                            <div><div style="font-weight:500">支付宝</div><div class="mono muted" style="font-size:11px">alipay</div></div>
+                                        </div>
+                                    </td>
+                                    <td><span class="pill green">prod</span></td>
+                                    <td><span class="code-block">https://openapi.alipay.com</span></td>
+                                    <td><span class="pill">RSA 签名</span></td>
+                                    <td><button class="b-toggle on" role="switch" aria-label="支付宝启用" aria-checked="true"></button></td>
+                                    <td><span class="status-dot up"></span> <span class="muted" style="font-size:12px">99.8%</span></td>
+                                    <td><span class="mono muted">v31</span></td>
+                                    <td><div class="row-actions"><button class="icon-btn" title="编辑" aria-label="编辑支付宝"><i data-lucide="pencil"></i></button><button class="icon-btn" title="更多" aria-label="更多"><i data-lucide="more-horizontal"></i></button></div></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="checkbox" aria-label="选择银行路由"></td>
+                                    <td>
+                                        <div class="b-channel-cell">
+                                            <div class="b-channel-icon">BR</div>
+                                            <div><div style="font-weight:500">银行路由</div><div class="mono muted" style="font-size:11px">bank-router</div></div>
+                                        </div>
+                                    </td>
+                                    <td><span class="pill green">prod</span></td>
+                                    <td><span class="code-block">https://router.bank.example.com</span></td>
+                                    <td><span class="pill">mTLS</span></td>
+                                    <td><button class="b-toggle" role="switch" aria-label="银行路由启用" aria-checked="false"></button></td>
+                                    <td><span class="status-dot down"></span> <span class="muted" style="font-size:12px">84.1%</span></td>
+                                    <td><span class="mono muted">v29</span></td>
+                                    <td><div class="row-actions"><button class="icon-btn" title="编辑" aria-label="编辑银行路由"><i data-lucide="pencil"></i></button><button class="icon-btn" title="更多" aria-label="更多"><i data-lucide="more-horizontal"></i></button></div></td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <aside class="b-panel b-release-panel">
+                        <div class="b-release-head">
+                            <h2>待发布变更</h2>
+                            <div class="muted" style="font-size:12px;margin-top:4px">2 个渠道 · 3 项变更</div>
+                        </div>
+                        <div class="b-release-body">
+                            <div class="b-release-item">
+                                <div class="top"><span>wechat-pay BaseURL</span><span class="b-diff-tag">URL</span></div>
+                                <div class="diff">https://api.mch.weixin.qq.com → /v3</div>
+                            </div>
+                            <div class="b-release-item">
+                                <div class="top"><span>wechat-pay 密钥轮换</span><span class="b-diff-tag">SECRET</span></div>
+                                <div class="diff">encrypted · last rotated 30d ago</div>
+                            </div>
+                            <div class="b-release-item">
+                                <div class="top"><span>aliyun-sms 超时调整</span><span class="b-diff-tag">POLICY</span></div>
+                                <div class="diff">read 5000ms → 3000ms</div>
+                            </div>
+                            <div class="b-gray-row">
+                                <label for="grayRange">灰度比例 <span>20%</span></label>
+                                <input id="grayRange" type="range" min="0" max="100" value="20">
+                            </div>
+                            <div class="b-release-actions">
+                                <button class="btn">灰度发布</button>
+                                <button class="btn btn-primary">全量发布</button>
+                            </div>
+                            <div class="b-history">
+                                <h3>最近发布</h3>
+                                <div class="b-history-item"><span>v45 · wechat-pay</span><span class="muted mono">14:20</span></div>
+                                <div class="b-history-item"><span>v42 · aliyun-sms</span><span class="muted mono">13:48</span></div>
+                                <div class="b-history-item"><span>v38 · tencent-sms</span><span class="muted mono">昨天</span></div>
+                            </div>
+                        </div>
+                    </aside>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Variant C: Traffic Control -->
+    <section class="variant variant-c" data-variant="C" hidden>
+        <div class="c-shell">
+            <header class="c-topbar">
+                <div class="c-brand"><div class="c-brand-mark">3A</div><span>Third API Flow</span></div>
+                <div class="c-seg" role="group" aria-label="环境">
+                    <button>dev</button>
+                    <button>test</button>
+                    <button class="active">prod</button>
+                </div>
+                <div class="c-topbar-right">
+                    <span class="pill green"><span class="status-dot up"></span> 4/5 健康</span>
+                    <button class="icon-btn" title="通知" aria-label="通知"><i data-lucide="bell"></i></button>
+                    <button class="icon-btn" title="设置" aria-label="设置"><i data-lucide="settings"></i></button>
+                </div>
+            </header>
+
+            <div class="c-content">
+                <div class="c-title-row">
+                    <h1>接口调度</h1>
+                    <span class="pill"><i data-lucide="route" style="width:13px;height:13px"></i>sms.send</span>
+                    <button class="btn" style="margin-left:auto"><i data-lucide="play"></i>立即探测</button>
+                    <button class="btn btn-primary"><i data-lucide="sliders-horizontal"></i>编辑策略</button>
+                </div>
+
+                <div class="c-pipeline">
+                    <section class="c-col" aria-labelledby="c-entries">
+                        <div class="c-col-head"><h2 id="c-entries">业务入口</h2><span class="count">4</span></div>
+                        <div class="c-entry-list">
+                            <button class="c-entry active">
+                                <span class="c-entry-icon"><i data-lucide="message-square"></i></span>
+                                <span class="c-entry-main"><span class="c-entry-name">订单短信</span><span class="c-entry-meta">order.sms</span></span>
+                                <span class="c-traffic">2.4K/s</span>
+                            </button>
+                            <button class="c-entry">
+                                <span class="c-entry-icon"><i data-lucide="credit-card"></i></span>
+                                <span class="c-entry-main"><span class="c-entry-name">支付回调</span><span class="c-entry-meta">pay.callback</span></span>
+                                <span class="c-traffic">860/s</span>
+                            </button>
+                            <button class="c-entry">
+                                <span class="c-entry-icon"><i data-lucide="shield"></i></span>
+                                <span class="c-entry-main"><span class="c-entry-name">登录鉴权</span><span class="c-entry-meta">auth.login</span></span>
+                                <span class="c-traffic">1.1K/s</span>
+                            </button>
+                            <button class="c-entry">
+                                <span class="c-entry-icon"><i data-lucide="scan-line"></i></span>
+                                <span class="c-entry-main"><span class="c-entry-name">证件核验</span><span class="c-entry-meta">identity.verify</span></span>
+                                <span class="c-traffic">320/s</span>
+                            </button>
+                        </div>
+                    </section>
+
+                    <section class="c-col" aria-labelledby="c-endpoint">
+                        <div class="c-col-head"><h2 id="c-endpoint">接口定义</h2><span class="count">sms.send</span></div>
+                        <div class="c-endpoint-body">
+                            <div class="c-method-path"><span class="c-method">POST</span><span class="c-path">/v1/sms/send</span></div>
+                            <div class="c-tag-row">
+                                <span class="pill green">timeout 3s</span>
+                                <span class="pill">retry 2</span>
+                                <span class="pill amber">breaker 50%</span>
+                                <span class="pill">rate 1000/s</span>
+                            </div>
+                            <div class="c-field"><span class="label">当前渠道</span><span class="value">aliyun-sms</span></div>
+                            <div class="c-field"><span class="label">备用渠道</span><span class="value">tencent-sms</span></div>
+                            <div class="c-field"><span class="label">鉴权</span><span class="value">API Key + 签名</span></div>
+                            <div class="c-field"><span class="label">响应映射</span><span class="value">ApiResult / JSON</span></div>
+                            <div class="c-field"><span class="label">配置版本</span><span class="value">v42 · 灰度 20%</span></div>
+                        </div>
+                    </section>
+
+                    <section class="c-col" aria-labelledby="c-channels">
+                        <div class="c-col-head"><h2 id="c-channels">渠道运行态</h2><span class="count">2/3 UP</span></div>
+                        <div class="c-channel-list">
+                            <div class="c-channel">
+                                <div class="c-channel-top">
+                                    <div class="provider-icon">AS</div>
+                                    <div><div class="name">阿里云短信</div><div class="code">aliyun-sms</div></div>
+                                    <span class="status-dot up health"></span>
+                                </div>
+                                <div class="c-channel-meta">
+                                    <span>Base <span class="mono">dysmsapi.aliyuncs.com</span></span>
+                                    <span>成功率 <span class="mono">99.7%</span> · P95 <span class="mono">142ms</span></span>
+                                </div>
+                                <div class="c-token-row"><span class="label">Token</span><span class="pill green">有效 · 12min</span></div>
+                            </div>
+                            <div class="c-channel">
+                                <div class="c-channel-top">
+                                    <div class="provider-icon">TS</div>
+                                    <div><div class="name">腾讯云短信</div><div class="code">tencent-sms</div></div>
+                                    <span class="status-dot up health"></span>
+                                </div>
+                                <div class="c-channel-meta">
+                                    <span>Base <span class="mono">sms.tencentcloudapi.com</span></span>
+                                    <span>成功率 <span class="mono">99.4%</span> · P95 <span class="mono">151ms</span></span>
+                                </div>
+                                <div class="c-token-row"><span class="label">Token</span><span class="pill green">有效 · 23min</span></div>
+                            </div>
+                            <div class="c-channel">
+                                <div class="c-channel-top">
+                                    <div class="provider-icon">WK</div>
+                                    <div><div class="name">消息通道</div><div class="code">wechat-msg</div></div>
+                                    <span class="status-dot down health"></span>
+                                </div>
+                                <div class="c-channel-meta">
+                                    <span>Base <span class="mono">api.weixin.qq.com</span></span>
+                                    <span>成功率 <span class="mono">84.1%</span> · P95 <span class="mono">812ms</span></span>
+                                </div>
+                                <div class="c-token-row"><span class="label">Token</span><span class="pill red">刷新失败</span></div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <section class="c-logs-panel" aria-labelledby="c-logs">
+                    <div class="c-logs-head">
+                        <span class="c-live-dot" aria-hidden="true"></span>
+                        <h2 id="c-logs">调用流水</h2>
+                        <span class="muted" style="font-size:12px;margin-left:8px">最近 30 秒</span>
+                        <div class="spacer" style="flex:1"></div>
+                        <button class="icon-btn" title="暂停" aria-label="暂停"><i data-lucide="pause"></i></button>
+                    </div>
+                    <div style="overflow-x:auto">
+                        <table class="c-logs-table">
+                            <thead>
+                            <tr>
+                                <th>时间</th>
+                                <th>TraceID</th>
+                                <th>入口</th>
+                                <th>接口</th>
+                                <th>渠道</th>
+                                <th>状态</th>
+                                <th>耗时</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr><td>14:32:08.412</td><td>7f3a9c2e</td><td>order.sms</td><td>sms.send</td><td>aliyun-sms</td><td class="ok">200 OK</td><td>118ms</td></tr>
+                            <tr><td>14:32:08.120</td><td>8b10fd21</td><td>pay.callback</td><td>pay.notify</td><td>wechat-pay</td><td class="ok">200 OK</td><td>164ms</td></tr>
+                            <tr><td>14:32:07.884</td><td>2e6c9a05</td><td>order.sms</td><td>sms.send</td><td>aliyun-sms</td><td class="ok">200 OK</td><td>132ms</td></tr>
+                            <tr><td>14:32:07.651</td><td>5d01aa7c</td><td>auth.login</td><td>auth.token</td><td>id-auth</td><td class="err">503 熔断</td><td>6ms</td></tr>
+                            <tr><td>14:32:07.202</td><td>c94b3f12</td><td>identity.verify</td><td>idcard.ocr</td><td>ocr-pro</td><td class="ok">200 OK</td><td>226ms</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </section>
+</main>
+
+<div class="proto-switcher" role="toolbar" aria-label="原型变体切换">
+    <button id="prevVariant" aria-label="上一个变体" title="上一个变体"><i data-lucide="chevron-left"></i></button>
+    <span id="variantLabel">A · Command Center</span>
+    <button id="nextVariant" aria-label="下一个变体" title="下一个变体"><i data-lucide="chevron-right"></i></button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>
+    const variants = ["A", "B", "C"];
+    const labels = {
+        A: "A · Command Center",
+        B: "B · Service Desk",
+        C: "C · Traffic Control"
+    };
+
+    function currentVariant() {
+        const value = new URLSearchParams(window.location.search).get("variant");
+        return variants.includes(value) ? value : "A";
+    }
+
+    function renderVariant(variant) {
+        document.body.dataset.variant = variant;
+        document.querySelectorAll(".variant").forEach(function (section) {
+            section.hidden = section.dataset.variant !== variant;
+        });
+        document.getElementById("variantLabel").textContent = labels[variant];
+        refreshIcons();
+    }
+
+    function switchVariant(offset) {
+        const index = variants.indexOf(currentVariant());
+        const next = variants[(index + offset + variants.length) % variants.length];
+        const url = new URL(window.location.href);
+        url.searchParams.set("variant", next);
+        window.history.replaceState({}, "", url);
+        renderVariant(next);
+    }
+
+    function refreshIcons() {
+        if (window.lucide) {
+            window.lucide.createIcons();
+        }
+    }
+
+    document.getElementById("prevVariant").addEventListener("click", function () {
+        switchVariant(-1);
+    });
+
+    document.getElementById("nextVariant").addEventListener("click", function () {
+        switchVariant(1);
+    });
+
+    document.addEventListener("keydown", function (event) {
+        const tag = document.activeElement && document.activeElement.tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") {
+            return;
+        }
+        if (event.key === "ArrowLeft") {
+            switchVariant(-1);
+        }
+        if (event.key === "ArrowRight") {
+            switchVariant(1);
+        }
+    });
+
+    document.querySelectorAll(".b-nav-item, .c-entry, .a-seg button, .b-seg button, .c-seg button").forEach(function (button) {
+        button.addEventListener("click", function () {
+            const group = button.closest(".a-seg, .b-seg, .c-seg, .b-nav");
+            if (group) {
+                group.querySelectorAll(".active").forEach(function (item) {
+                    item.classList.remove("active");
+                });
+            } else {
+                const parent = button.parentElement;
+                if (parent) {
+                    parent.querySelectorAll(".active").forEach(function (item) {
+                        item.classList.remove("active");
+                    });
+                }
+            }
+            button.classList.add("active");
+            refreshIcons();
+        });
+    });
+
+    renderVariant(currentVariant());
+</script>
+</body>
+</html>

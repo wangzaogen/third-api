@@ -1,0 +1,14 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: third-api-admin
+  datasource:
+    url: jdbc:sqlite:./third-api-sqlite.db
+    driver-class-name: org.sqlite.JDBC
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:db/sqlite-schema.sql
+      data-locations: classpath:db/sqlite-data.sql
