@@ -3,6 +3,9 @@ package com.thirdapi.starter.logging;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * 基于 SLF4J 的日志实现：成功调用输出 info，失败调用输出 warn。
+ */
 public class Slf4jCallLogger implements CallLogger {
 
     private static final Logger log = LoggerFactory.getLogger("THIRD_API_CALL");

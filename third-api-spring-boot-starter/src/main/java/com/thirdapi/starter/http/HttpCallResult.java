@@ -1,5 +1,8 @@
 package com.thirdapi.starter.http;
 
+/**
+ * 一次 HTTP 调用的结果，包含状态码、响应体与错误信息。
+ */
 public class HttpCallResult {
 
     private int statusCode;
@@ -15,6 +18,9 @@ public class HttpCallResult {
         this.body = body;
     }
 
+    /**
+     * 2xx 状态码视为调用成功。
+     */
     public boolean isSuccess() {
         return statusCode >= 200 && statusCode < 300;
     }

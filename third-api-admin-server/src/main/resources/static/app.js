@@ -240,12 +240,7 @@
 
     function fillChannelSelect() {
         const select = document.getElementById("channelSelect");
-        select.innerHTML = "<option value=\"\">选择渠道</option>"
-            + state.channels.map(function (channel) {
-                return "<option value=\"" + esc(channel.id) + "\""
-                    + (state.selectedChannelId === channel.id ? " selected" : "") + ">"
-                    + esc(channel.name) + " · " + esc(channel.code) + "</option>";
-            }).join("");
+        select.innerHTML = channelOptionsHtml(state.selectedChannelId);
         if (!state.selectedChannelId && state.channels.length > 0) {
             state.selectedChannelId = state.channels[0].id;
             select.value = String(state.selectedChannelId);
@@ -262,12 +257,7 @@
 
     function fillAuthSelect() {
         const select = document.getElementById("authChannelSelect");
-        select.innerHTML = "<option value=\"\">选择渠道</option>"
-            + state.channels.map(function (channel) {
-                return "<option value=\"" + esc(channel.id) + "\""
-                    + (state.selectedAuthChannelId === channel.id ? " selected" : "") + ">"
-                    + esc(channel.name) + " · " + esc(channel.code) + "</option>";
-            }).join("");
+        select.innerHTML = channelOptionsHtml(state.selectedAuthChannelId);
         if (!state.selectedAuthChannelId && state.channels.length > 0) {
             state.selectedAuthChannelId = state.channels[0].id;
             select.value = String(state.selectedAuthChannelId);
@@ -276,16 +266,20 @@
 
     function fillHealthSelect() {
         const select = document.getElementById("healthChannelSelect");
-        select.innerHTML = "<option value=\"\">选择渠道</option>"
-            + state.channels.map(function (channel) {
-                return "<option value=\"" + esc(channel.id) + "\""
-                    + (state.selectedHealthChannelId === channel.id ? " selected" : "") + ">"
-                    + esc(channel.name) + " · " + esc(channel.code) + "</option>";
-            }).join("");
+        select.innerHTML = channelOptionsHtml(state.selectedHealthChannelId);
         if (!state.selectedHealthChannelId && state.channels.length > 0) {
             state.selectedHealthChannelId = state.channels[0].id;
             select.value = String(state.selectedHealthChannelId);
         }
+    }
+
+    function channelOptionsHtml(selectedId) {
+        return "<option value=\"\">选择渠道</option>"
+            + state.channels.map(function (channel) {
+                return "<option value=\"" + esc(channel.id) + "\""
+                    + (selectedId === channel.id ? " selected" : "") + ">"
+                    + esc(channel.name) + " · " + esc(channel.code) + "</option>";
+            }).join("");
     }
 
     function loadAuthConfig() {

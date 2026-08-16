@@ -2,22 +2,20 @@ package com.thirdapi.starter.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thirdapi.starter.autoconfigure.ThirdApiProperties;
+import com.thirdapi.starter.util.Streams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 
 /**
- * Pulls configuration from the admin server.
+ * 从管理端拉取配置的配置源。
  *
- * <p>Protocol: GET /api/v1/apps/{appId}/configs?version={version}&amp;longPoll={seconds}
- * with X-App-Id and X-App-Secret headers. Returns 304 when nothing changed.</p>
+ * <p>协议：GET /api/v1/apps/{appId}/configs?version={version}&amp;longPoll={seconds}
+ * 请求头携带 X-App-Id 与 X-App-Secret；服务端返回 304 表示配置没有变化。</p>
  */
 public class AdminConfigSource implements ConfigSource {
 
@@ -51,6 +49,7 @@ public class AdminConfigSource implements ConfigSource {
             connection.setRequestProperty("X-App-Secret", properties.getAppSecret());
             int status = connection.getResponseCode();
             if (status == HttpURLConnection.HTTP_NOT_MODIFIED) {
+                // 版本未变化，返回 null 表示本轮无需更新
                 return null;
             }
             if (status != HttpURLConnection.HTTP_OK) {
@@ -58,7 +57,7 @@ public class AdminConfigSource implements ConfigSource {
                 return null;
             }
             InputStream input = connection.getInputStream();
-            String body = read(input);
+            String body = Streams.readUtf8(input);
             if (body == null || body.isEmpty()) {
                 return null;
             }
@@ -75,6 +74,9 @@ public class AdminConfigSource implements ConfigSource {
         }
     }
 
+    /**
+     * 拼接管理端配置拉取地址，版本号与长轮询秒数来自属性配置。
+     */
     private String buildUrl() throws IOException {
         String base = properties.getAdminUrl();
         if (base == null || base.isEmpty()) {
@@ -87,16 +89,6 @@ public class AdminConfigSource implements ConfigSource {
         sb.append("/api/v1/apps/").append(properties.getAppId())
                 .append("/configs?version=").append(lastVersion)
                 .append("&longPoll=").append(properties.getLongPollTimeoutSeconds());
-        return sb.toString();
-    }
-
-    private String read(InputStream input) throws IOException {
-        StringBuilder sb = new StringBuilder();
-        BufferedReader reader = new BufferedReader(new InputStreamReader(input, StandardCharsets.UTF_8));
-        String line;
-        while ((line = reader.readLine()) != null) {
-            sb.append(line).append('\n');
-        }
         return sb.toString();
     }
 }

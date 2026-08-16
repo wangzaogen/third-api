@@ -3,7 +3,10 @@ package com.thirdapi.starter.config;
 import java.util.Map;
 
 /**
- * Runtime configuration snapshot for one third-party endpoint.
+ * 单个第三方接口的运行时配置快照。
+ *
+ * <p>配置可来自本地属性文件或管理端动态下发，执行器在每次调用时
+ * 从 ConfigStore 读取并生效，从而支持配置热更新。</p>
  */
 public class ApiConfig {
 
@@ -27,6 +30,9 @@ public class ApiConfig {
     private int circuitBreakerMinCalls = 5;
     private long circuitBreakerOpenTimeoutMs = 10000L;
 
+    /**
+     * 返回 provider.channel.endpoint 组成的唯一键，用于配置关联与统计。
+     */
     public String key() {
         return provider + "." + channel + "." + endpoint;
     }

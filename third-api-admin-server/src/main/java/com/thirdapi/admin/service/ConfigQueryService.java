@@ -83,13 +83,15 @@ public class ConfigQueryService {
         config.setEndpoint(rs.getString("endpoint_code"));
         config.setBaseUrl(rs.getString("base_url"));
         config.setPath(rs.getString("path"));
-        config.setHttpMethod(rs.getString("http_method") == null ? "POST" : rs.getString("http_method").toUpperCase());
+        String httpMethod = rs.getString("http_method");
+        config.setHttpMethod(httpMethod == null ? "POST" : httpMethod.toUpperCase());
         config.setTimeoutMs(rs.getInt("timeout_ms"));
         config.setMaxRetries(rs.getInt("retry_max"));
         config.setRetryBackoffMs(rs.getLong("retry_backoff_ms"));
         double ratio = rs.getDouble("breaker_ratio");
         config.setCircuitBreakerThreshold((int) Math.round(ratio * 100));
-        config.setAuthType(rs.getString("auth_type") == null ? "NONE" : rs.getString("auth_type").toUpperCase());
+        String authType = rs.getString("auth_type");
+        config.setAuthType(authType == null ? "NONE" : authType.toUpperCase());
         config.setTokenUrl(rs.getString("token_url"));
         config.setClientId(rs.getString("client_id"));
         config.setClientSecret(rs.getString("client_secret_encrypted"));

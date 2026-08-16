@@ -20,8 +20,10 @@ import com.thirdapi.starter.resilience.ResiliencePolicy;
 import java.util.UUID;
 
 /**
- * Unified invocation pipeline: request building, auth, retry/circuit breaker,
- * response mapping, logging and metrics.
+ * 统一调用流水线：请求构建、鉴权、重试/熔断、响应映射、日志与指标。
+ *
+ * <p>代理客户端的所有业务调用都会进入该执行器，调用结果按接口返回类型
+ * 映射为 String、ApiResult 或业务 POJO。</p>
  */
 public class ApiInvocationExecutor {
 
@@ -55,6 +57,9 @@ public class ApiInvocationExecutor {
         this.objectMapper = objectMapper;
     }
 
+    /**
+     * 执行一次第三方接口调用，并输出日志与指标。
+     */
     public Object execute(ApiInvocation invocation) {
         String key = invocation.getProvider() + "." + invocation.getChannel() + "." + invocation.getEndpoint();
         String traceId = UUID.randomUUID().toString().replace("-", "").substring(0, 16);
@@ -62,17 +67,16 @@ public class ApiInvocationExecutor {
 
         ApiConfig config = configStore.get(key);
         if (config == null) {
+            // 管理端或本地配置未下发时，使用注解定义与全局默认值兜底
             config = buildFallbackConfig(invocation);
         }
         if (!config.isEnabled()) {
-            ApiCallLog callLog = new ApiCallLog();
-            fillBase(callLog, invocation, traceId, startedAt);
+            // 接口被禁用时直接返回失败，不发起真实 HTTP 请求
+            ApiCallLog callLog = newCallLog(invocation, traceId, startedAt);
             callLog.setSuccess(false);
             callLog.setErrorType("DISABLED");
             callLog.setErrorMessage("Endpoint is disabled");
-            callLog.setCostMs(System.currentTimeMillis() - startedAt);
-            callLogger.log(callLog);
-            callMetrics.record(callLog);
+            record(callLog);
             return buildFailure(invocation, "DISABLED", "Endpoint is disabled");
         }
 
@@ -86,8 +90,7 @@ public class ApiInvocationExecutor {
                             effectiveConfig.getTimeoutMs(),
                             effectiveConfig.getTimeoutMs()));
 
-            ApiCallLog callLog = new ApiCallLog();
-            fillBase(callLog, invocation, traceId, startedAt);
+            ApiCallLog callLog = newCallLog(invocation, traceId, startedAt);
             callLog.setHttpMethod(request.getMethod());
             callLog.setUrl(request.getUrl());
             callLog.setRequestBody(truncate(request.getBody()));
@@ -96,24 +99,40 @@ public class ApiInvocationExecutor {
             callLog.setSuccess(result.isSuccess());
             callLog.setErrorType(result.getErrorType());
             callLog.setErrorMessage(result.getErrorMessage());
-            callLog.setCostMs(System.currentTimeMillis() - startedAt);
-            callLogger.log(callLog);
-            callMetrics.record(callLog);
+            record(callLog);
 
             return mapResult(invocation, result);
         } catch (RuntimeException e) {
-            ApiCallLog callLog = new ApiCallLog();
-            fillBase(callLog, invocation, traceId, startedAt);
+            ApiCallLog callLog = newCallLog(invocation, traceId, startedAt);
             callLog.setSuccess(false);
             callLog.setErrorType(e.getClass().getSimpleName());
             callLog.setErrorMessage(e.getMessage());
-            callLog.setCostMs(System.currentTimeMillis() - startedAt);
-            callLogger.log(callLog);
-            callMetrics.record(callLog);
+            record(callLog);
             return buildFailure(invocation, e.getClass().getSimpleName(), e.getMessage());
         }
     }
 
+    /**
+     * 创建带公共字段与耗时的调用日志。
+     */
+    private ApiCallLog newCallLog(ApiInvocation invocation, String traceId, long startedAt) {
+        ApiCallLog callLog = new ApiCallLog();
+        fillBase(callLog, invocation, traceId, startedAt);
+        callLog.setCostMs(System.currentTimeMillis() - startedAt);
+        return callLog;
+    }
+
+    /**
+     * 输出调用日志并同步记录指标。
+     */
+    private void record(ApiCallLog callLog) {
+        callLogger.log(callLog);
+        callMetrics.record(callLog);
+    }
+
+    /**
+     * 基于注解定义和全局默认配置生成兜底配置。
+     */
     private ApiConfig buildFallbackConfig(ApiInvocation invocation) {
         ApiConfig config = new ApiConfig();
         config.setProvider(invocation.getProvider());
@@ -142,6 +161,10 @@ public class ApiInvocationExecutor {
         return config;
     }
 
+    /**
+     * 按接口返回类型映射响应：void 返回 null，String 返回原文，
+     * ApiResult 或业务 POJO 通过 JSON 反序列化。
+     */
     private Object mapResult(ApiInvocation invocation, HttpCallResult result) {
         Class<?> returnType = invocation.getReturnType();
         if (returnType == null || returnType == Void.TYPE) {
@@ -171,6 +194,9 @@ public class ApiInvocationExecutor {
         }
     }
 
+    /**
+     * 返回类型为 ApiResult 时包装失败结果，其他类型返回 null。
+     */
     private Object buildFailure(ApiInvocation invocation, String code, String message) {
         Class<?> returnType = invocation.getReturnType();
         if (returnType != null && returnType == ApiResult.class) {
@@ -179,6 +205,9 @@ public class ApiInvocationExecutor {
         return null;
     }
 
+    /**
+     * 填充调用日志中与请求来源相关的公共字段。
+     */
     private void fillBase(ApiCallLog callLog, ApiInvocation invocation, String traceId, long startedAt) {
         callLog.setTraceId(traceId);
         callLog.setAppName(properties.getAppName());
@@ -188,6 +217,9 @@ public class ApiInvocationExecutor {
         callLog.setRequestAtMillis(startedAt);
     }
 
+    /**
+     * 截断超过 2000 字符的请求/响应报文，避免日志过大。
+     */
     private String truncate(String value) {
         if (value == null || value.length() <= 2000) {
             return value;

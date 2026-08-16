@@ -33,7 +33,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Auto configuration for the third-api starter.
+ * third-api Starter 的自动配置入口。
+ *
+ * <p>在 classpath 存在 SDK 注解时自动创建配置存储、请求构建器、鉴权处理器、
+ * 调用执行器、代理工厂等核心 Bean；业务系统可通过同名 Bean 覆盖默认实现。</p>
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnClass(ThirdPartyApi.class)
@@ -113,6 +116,7 @@ public class ThirdApiAutoConfiguration {
                                                ThirdApiProperties properties,
                                                ObjectMapper objectMapper) {
         List<ConfigSource> sources = new ArrayList<ConfigSource>();
+        // 本地属性配置始终作为基础配置源，admin 模式下再叠加管理端动态配置
         sources.add(new LocalConfigSource(properties));
         boolean adminMode = "admin".equalsIgnoreCase(properties.getMode())
                 && properties.getAdminUrl() != null

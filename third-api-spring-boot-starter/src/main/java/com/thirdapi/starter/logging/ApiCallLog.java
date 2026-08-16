@@ -1,5 +1,10 @@
 package com.thirdapi.starter.logging;
 
+/**
+ * 一次第三方接口调用的日志对象，包含请求/响应摘要、耗时与错误信息。
+ *
+ * <p>由调用执行器填充，经 CallLogger 输出，并可供 CallMetrics 统计。</p>
+ */
 public class ApiCallLog {
 
     private String traceId;

@@ -6,7 +6,7 @@ import com.thirdapi.starter.registry.ThirdApiRegistry;
 import java.lang.reflect.Proxy;
 
 /**
- * Creates JDK proxies for annotated third-party API interfaces.
+ * 为标注了 @ThirdPartyApi 的接口创建 JDK 动态代理。
  */
 public class ThirdApiClientFactory {
 
@@ -20,6 +20,7 @@ public class ThirdApiClientFactory {
 
     @SuppressWarnings("unchecked")
     public <T> T create(Class<T> clientType) {
+        // 先注册接口中的端点定义，再创建代理，保证调用前定义已经可解析
         registry.register(clientType);
         return (T) Proxy.newProxyInstance(
                 clientType.getClassLoader(),

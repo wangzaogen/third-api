@@ -1,17 +1,23 @@
 package com.thirdapi.starter.http;
 
-import java.io.BufferedReader;
+import com.thirdapi.starter.util.Streams;
+
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
+/**
+ * 基于 HttpURLConnection 的轻量 HTTP 客户端。
+ */
 public class SimpleHttpClient {
 
+    /**
+     * 执行一次 HTTP 请求；4xx/5xx 会被标记为 HTTP_xxx 错误，IO 异常标记为 IO。
+     */
     public HttpCallResult execute(ApiRequest request, int connectTimeoutMs, int readTimeoutMs) {
         HttpURLConnection connection = null;
         try {
@@ -34,8 +40,9 @@ public class SimpleHttpClient {
                 output.close();
             }
             int status = connection.getResponseCode();
+            // 4xx/5xx 读取错误流，其他状态读取正常响应流
             InputStream input = status >= 400 ? connection.getErrorStream() : connection.getInputStream();
-            String body = read(input);
+            String body = Streams.readUtf8(input);
             HttpCallResult result = new HttpCallResult(status, body);
             if (status >= 400) {
                 result.setErrorType("HTTP_" + status);
@@ -52,18 +59,5 @@ public class SimpleHttpClient {
                 connection.disconnect();
             }
         }
-    }
-
-    private String read(InputStream input) throws IOException {
-        if (input == null) {
-            return "";
-        }
-        StringBuilder sb = new StringBuilder();
-        BufferedReader reader = new BufferedReader(new InputStreamReader(input, StandardCharsets.UTF_8));
-        String line;
-        while ((line = reader.readLine()) != null) {
-            sb.append(line).append('\n');
-        }
-        return sb.toString();
     }
 }

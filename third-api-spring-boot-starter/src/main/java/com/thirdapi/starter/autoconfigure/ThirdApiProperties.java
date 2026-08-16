@@ -7,23 +7,39 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * third-api.* configuration properties.
+ * third-api.* 配置属性。
+ *
+ * <p>用于控制启用开关、运行模式、管理端连接、默认超时/重试/熔断参数，
+ * 以及本地端点配置列表。</p>
  */
 @ConfigurationProperties(prefix = "third-api")
 public class ThirdApiProperties {
 
+    /** 总开关，false 时自动配置不生效。 */
     private boolean enabled = true;
+    /** 运行模式：local 使用本地配置，admin 从管理端拉取配置。 */
     private String mode = "local";
+    /** 应用名称，用于调用日志与指标标识。 */
     private String appName = "unknown";
+    /** 管理端基础地址。 */
     private String adminUrl = "";
+    /** 管理端应用 ID。 */
     private String appId = "";
+    /** 管理端应用密钥。 */
     private String appSecret = "";
+    /** 配置缓存时间（秒），供需要缓存的管理端模式使用。 */
     private int cacheTtlSeconds = 60;
+    /** admin 模式下配置轮询间隔（秒）。 */
     private int pollIntervalSeconds = 30;
+    /** 管理端配置长轮询超时（秒）。 */
     private int longPollTimeoutSeconds = 30;
+    /** 默认连接与读取超时配置。 */
     private Timeout defaultTimeout = new Timeout();
+    /** 默认重试配置。 */
     private Retry defaultRetry = new Retry();
+    /** 默认熔断配置。 */
     private CircuitBreaker defaultCircuitBreaker = new CircuitBreaker();
+    /** 本地端点配置列表，对应 third-api.endpoints.*。 */
     private List<Endpoint> endpoints = new ArrayList<Endpoint>();
 
     public boolean isEnabled() {
@@ -130,9 +146,14 @@ public class ThirdApiProperties {
         this.endpoints = endpoints;
     }
 
+    /**
+     * 默认超时配置。
+     */
     public static class Timeout {
 
+        /** 连接超时（毫秒）。 */
         private int connectMs = 3000;
+        /** 读取超时（毫秒）。 */
         private int readMs = 5000;
 
         public int getConnectMs() {
@@ -152,9 +173,14 @@ public class ThirdApiProperties {
         }
     }
 
+    /**
+     * 默认重试配置。
+     */
     public static class Retry {
 
+        /** 最大尝试次数，包含首次调用。 */
         private int maxAttempts = 2;
+        /** 重试等待时间基数（毫秒），后续重试按倍数递增。 */
         private long backoffMs = 200L;
 
         public int getMaxAttempts() {
@@ -174,10 +200,16 @@ public class ThirdApiProperties {
         }
     }
 
+    /**
+     * 默认熔断配置。
+     */
     public static class CircuitBreaker {
 
+        /** 打开熔断的失败率阈值（百分比）。 */
         private int failureRatioThreshold = 50;
+        /** 最少统计调用数，达到该数量后才判断失败率。 */
         private int minCalls = 5;
+        /** 熔断打开时长（毫秒）。 */
         private long openTimeoutMs = 10000L;
 
         public int getFailureRatioThreshold() {
@@ -205,23 +237,42 @@ public class ThirdApiProperties {
         }
     }
 
+    /**
+     * 单个本地端点的配置。
+     */
     public static class Endpoint {
 
+        /** 服务商编码。 */
         private String provider;
+        /** 渠道编码。 */
         private String channel;
+        /** 端点编码，需与 @ApiMethod.name 或方法名一致。 */
         private String name;
+        /** 基础地址，留空时使用注解上的 baseUrl。 */
         private String baseUrl;
+        /** 请求路径。 */
         private String path;
+        /** HTTP 方法，默认 POST。 */
         private String method = "POST";
+        /** 超时时间（毫秒），小于 0 时使用全局默认值。 */
         private int timeoutMs = -1;
+        /** 最大重试次数，小于 0 时使用全局默认值。 */
         private int maxRetries = -1;
+        /** 重试等待时间基数（毫秒），小于 0 时使用全局默认值。 */
         private long retryBackoffMs = -1;
+        /** 鉴权方式，默认 NONE。 */
         private String authType = "NONE";
+        /** OAuth2 获取令牌地址。 */
         private String tokenUrl;
+        /** 客户端 ID，用于 Basic 或 OAuth2 鉴权。 */
         private String clientId;
+        /** 客户端密钥，用于 Basic、OAuth2 或签名鉴权。 */
         private String clientSecret;
+        /** API Key。 */
         private String apiKey;
+        /** 鉴权扩展配置，例如自定义 API Key 请求头名。 */
         private Map<String, String> extraAuthConfig;
+        /** 是否启用该端点，false 时调用直接返回失败。 */
         private boolean enabled = true;
 
         public String getProvider() {

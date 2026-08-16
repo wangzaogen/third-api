@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Builds the initial snapshot from third-api.endpoints.* properties.
+ * 从 third-api.endpoints.* 本地配置构建初始快照。
  */
 public class LocalConfigSource implements ConfigSource {
 
@@ -33,6 +33,9 @@ public class LocalConfigSource implements ConfigSource {
         return snapshot;
     }
 
+    /**
+     * 将属性配置转换为运行时 ApiConfig，未单独配置的项使用全局默认值。
+     */
     private ApiConfig toConfig(ThirdApiProperties.Endpoint source) {
         ApiConfig config = new ApiConfig();
         config.setProvider(source.getProvider());

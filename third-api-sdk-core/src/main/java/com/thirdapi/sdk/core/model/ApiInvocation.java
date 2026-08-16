@@ -4,7 +4,10 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 
 /**
- * Runtime context of one third-party call.
+ * 一次第三方接口调用的运行时上下文。
+ *
+ * <p>由代理调用处理器组装，保存服务商、渠道、端点、请求地址和入参等
+ * 信息，供请求构建、执行、日志与指标链路使用。</p>
  */
 public class ApiInvocation {
 

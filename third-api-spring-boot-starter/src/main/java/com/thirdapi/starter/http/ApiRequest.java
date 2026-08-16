@@ -3,6 +3,9 @@ package com.thirdapi.starter.http;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+/**
+ * 一次 HTTP 请求的可变模型，在请求构建阶段组装并传递给 HTTP 客户端。
+ */
 public class ApiRequest {
 
     private String url;
@@ -31,6 +34,9 @@ public class ApiRequest {
         return headers;
     }
 
+    /**
+     * 添加请求头，同名请求头会被覆盖。
+     */
     public void addHeader(String name, String value) {
         headers.put(name, value);
     }

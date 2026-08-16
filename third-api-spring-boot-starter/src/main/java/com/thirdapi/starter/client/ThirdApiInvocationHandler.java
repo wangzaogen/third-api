@@ -8,6 +8,9 @@ import com.thirdapi.starter.registry.ThirdApiRegistry;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 
+/**
+ * 代理方法调用处理器，将接口方法调用转换为 ApiInvocation 并交给执行器。
+ */
 public class ThirdApiInvocationHandler implements InvocationHandler {
 
     private final Class<?> clientType;
@@ -24,6 +27,7 @@ public class ThirdApiInvocationHandler implements InvocationHandler {
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        // Object 自带方法在本地处理，业务方法才走第三方调用链路
         if (method.getDeclaringClass() == Object.class) {
             return handleObjectMethod(proxy, method, args);
         }
@@ -45,6 +49,9 @@ public class ThirdApiInvocationHandler implements InvocationHandler {
         return executor.execute(invocation);
     }
 
+    /**
+     * 处理 toString、hashCode、equals 等 JDK 对象方法。
+     */
     private Object handleObjectMethod(Object proxy, Method method, Object[] args) {
         String name = method.getName();
         if ("toString".equals(name)) {

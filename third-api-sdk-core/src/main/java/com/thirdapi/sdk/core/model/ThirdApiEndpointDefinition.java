@@ -1,7 +1,10 @@
 package com.thirdapi.sdk.core.model;
 
 /**
- * Immutable snapshot of a registered third-party endpoint.
+ * 注册后的第三方接口端点不可变定义。
+ *
+ * <p>保存从注解中解析出的静态契约；运行时动态配置（如管理端下发）会
+ * 覆盖其中可变的地址、超时和重试等参数。</p>
  */
 public class ThirdApiEndpointDefinition {
 
@@ -64,6 +67,9 @@ public class ThirdApiEndpointDefinition {
         return maxRetries;
     }
 
+    /**
+     * 返回 provider.channel.endpoint 组成的全局唯一标识，用于关联运行时配置。
+     */
     public String key() {
         return provider + "." + channel + "." + endpoint;
     }

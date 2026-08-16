@@ -9,7 +9,7 @@ import java.util.Base64;
 import java.util.Map;
 
 /**
- * Applies auth headers to a request based on runtime channel config.
+ * 根据渠道运行时配置为请求附加对应的鉴权信息。
  */
 public class AuthProcessor {
 
@@ -21,6 +21,9 @@ public class AuthProcessor {
         this.apiSigner = apiSigner;
     }
 
+    /**
+     * 按配置中的鉴权类型分发到具体的鉴权实现。
+     */
     public void apply(ApiRequest request, ApiConfig config) {
         AuthType type = AuthType.valueOf(config.getAuthType() == null ? "NONE" : config.getAuthType().toUpperCase());
         switch (type) {
@@ -42,6 +45,9 @@ public class AuthProcessor {
         }
     }
 
+    /**
+     * 默认写入 X-Api-Key 请求头，也可通过 extraAuthConfig.header 自定义请求头名。
+     */
     private void applyApiKey(ApiRequest request, ApiConfig config) {
         String header = "X-Api-Key";
         Map<String, String> extra = config.getExtraAuthConfig();
@@ -51,6 +57,9 @@ public class AuthProcessor {
         request.addHeader(header, config.getApiKey() == null ? "" : config.getApiKey());
     }
 
+    /**
+     * 将 clientId:clientSecret 做 Base64 编码后写入 Authorization。
+     */
     private void applyBasic(ApiRequest request, ApiConfig config) {
         String raw = (config.getClientId() == null ? "" : config.getClientId())
                 + ":" + (config.getClientSecret() == null ? "" : config.getClientSecret());

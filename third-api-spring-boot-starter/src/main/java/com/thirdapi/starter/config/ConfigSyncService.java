@@ -10,7 +10,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Loads config on startup and polls the admin server in admin mode.
+ * 配置同步服务：启动时立即加载一次配置，admin 模式下定时轮询管理端。
  */
 public class ConfigSyncService {
 
@@ -35,6 +35,9 @@ public class ConfigSyncService {
         start();
     }
 
+    /**
+     * 先同步一次配置；admin 模式再按轮询间隔启动定时刷新。
+     */
     private void start() {
         refresh();
         boolean adminMode = "admin".equalsIgnoreCase(properties.getMode())
@@ -46,6 +49,9 @@ public class ConfigSyncService {
         }
     }
 
+    /**
+     * 遍历所有配置源加载快照，单个配置源失败只告警，不影响其他来源。
+     */
     private void refresh() {
         for (ConfigSource source : sources) {
             try {
@@ -61,6 +67,9 @@ public class ConfigSyncService {
         }
     }
 
+    /**
+     * 停止定时任务，释放调度线程。
+     */
     public void close() {
         scheduler.shutdownNow();
     }

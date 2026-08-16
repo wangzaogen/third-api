@@ -7,7 +7,6 @@ import com.thirdapi.sdk.core.annotation.ApiParam;
 import com.thirdapi.sdk.core.model.ApiInvocation;
 import com.thirdapi.sdk.core.model.HttpMethod;
 import com.thirdapi.sdk.core.model.ParamLocation;
-import com.thirdapi.sdk.core.model.ThirdApiEndpointDefinition;
 import com.thirdapi.starter.config.ApiConfig;
 
 import java.io.UnsupportedEncodingException;
@@ -18,7 +17,10 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * Builds an HTTP request from an annotated client method and runtime config.
+ * 根据接口方法注解和运行时配置构建 HTTP 请求。
+ *
+ * <p>负责解析参数位置、拼接基础地址与路径、替换路径占位符、
+ * 追加查询参数，并序列化请求体。</p>
  */
 public class RequestBuilder {
 
@@ -28,6 +30,9 @@ public class RequestBuilder {
         this.objectMapper = objectMapper;
     }
 
+    /**
+     * 构建请求：运行时配置优先，其次使用注解定义中的地址、路径与 HTTP 方法。
+     */
     public ApiRequest build(ApiInvocation invocation, ApiConfig config) {
         ApiRequest request = new ApiRequest();
         String baseUrl = config != null && config.getBaseUrl() != null
@@ -52,6 +57,7 @@ public class RequestBuilder {
         int unannotatedCount = 0;
         Object unannotated = null;
 
+        // 按参数注解将入参分发到路径、查询串、请求头或请求体
         for (int i = 0; i < parameters.length; i++) {
             ApiParam param = parameters[i].getAnnotation(ApiParam.class);
             if (param == null) {
@@ -80,8 +86,8 @@ public class RequestBuilder {
 
         String url = joinUrl(baseUrl, path);
         url = applyPathParams(url, pathParams);
-        url = appendQuery(url, queryParams);
 
+        // 无注解的单个参数按请求类型处理：GET 类参数放入查询串，POST 类参数作为请求体
         if (unannotatedCount == 1 && bodyObject == null && !isBodyAllowed(httpMethod)) {
             if (unannotated instanceof Map) {
                 for (Map.Entry<?, ?> entry : ((Map<?, ?>) unannotated).entrySet()) {
@@ -90,7 +96,6 @@ public class RequestBuilder {
             } else {
                 queryParams.put("arg", String.valueOf(unannotated));
             }
-            url = appendQuery(url, queryParams);
         } else if (unannotatedCount == 1 && bodyObject == null && isBodyAllowed(httpMethod)) {
             bodyObject = unannotated;
         }
@@ -99,34 +104,13 @@ public class RequestBuilder {
             request.setBody(serializeBody(bodyObject));
         }
 
-        request.setUrl(url);
+        request.setUrl(appendQuery(url, queryParams));
         return request;
     }
 
-    public ApiConfig fallbackConfig(ThirdApiEndpointDefinition definition, ApiConfig defaultConfig) {
-        ApiConfig config = new ApiConfig();
-        config.setProvider(definition.getProvider());
-        config.setChannel(definition.getChannel());
-        config.setEndpoint(definition.getEndpoint());
-        config.setPath(definition.getPath());
-        config.setHttpMethod(definition.getHttpMethod().name());
-        config.setBaseUrl(definition.getBaseUrl());
-        if (defaultConfig != null) {
-            config.setTimeoutMs(defaultConfig.getTimeoutMs());
-            config.setMaxRetries(defaultConfig.getMaxRetries());
-            config.setRetryBackoffMs(defaultConfig.getRetryBackoffMs());
-            config.setAuthType(defaultConfig.getAuthType());
-            config.setTokenUrl(defaultConfig.getTokenUrl());
-            config.setClientId(defaultConfig.getClientId());
-            config.setClientSecret(defaultConfig.getClientSecret());
-            config.setApiKey(defaultConfig.getApiKey());
-            config.setCircuitBreakerThreshold(defaultConfig.getCircuitBreakerThreshold());
-            config.setCircuitBreakerMinCalls(defaultConfig.getCircuitBreakerMinCalls());
-            config.setCircuitBreakerOpenTimeoutMs(defaultConfig.getCircuitBreakerOpenTimeoutMs());
-        }
-        return config;
-    }
-
+    /**
+     * 字符串参数直接作为请求体，其他对象使用 ObjectMapper 序列化为 JSON。
+     */
     private String serializeBody(Object bodyObject) {
         if (bodyObject instanceof String) {
             return (String) bodyObject;
@@ -138,6 +122,9 @@ public class RequestBuilder {
         }
     }
 
+    /**
+     * 拼接基础地址与请求路径，去掉重复的斜杠。
+     */
     private String joinUrl(String baseUrl, String path) {
         String base = baseUrl == null ? "" : baseUrl.trim();
         String p = path == null ? "" : path.trim();
@@ -150,6 +137,9 @@ public class RequestBuilder {
         return base + p;
     }
 
+    /**
+     * 将 {参数名} 占位符替换为 URL 编码后的路径参数。
+     */
     private String applyPathParams(String url, Map<String, String> pathParams) {
         String result = url;
         for (Map.Entry<String, String> entry : pathParams.entrySet()) {
@@ -158,6 +148,9 @@ public class RequestBuilder {
         return result;
     }
 
+    /**
+     * 将查询参数按 key=value 追加到 URL，参数值做 URL 编码。
+     */
     private String appendQuery(String url, Map<String, String> queryParams) {
         if (queryParams.isEmpty()) {
             return url;
@@ -174,6 +167,9 @@ public class RequestBuilder {
         return sb.toString();
     }
 
+    /**
+     * 判断该 HTTP 方法是否允许携带请求体。
+     */
     private boolean isBodyAllowed(String method) {
         return "POST".equals(method)
                 || "PUT".equals(method)
@@ -181,6 +177,9 @@ public class RequestBuilder {
                 || "DELETE".equals(method);
     }
 
+    /**
+     * 对路径或查询参数做 UTF-8 URL 编码。
+     */
     private String encode(String value) {
         try {
             return URLEncoder.encode(value, "UTF-8");
