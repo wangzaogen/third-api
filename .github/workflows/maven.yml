@@ -1,0 +1,99 @@
+name: Java with Maven
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    name: Build and test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 8 and Maven
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '8'
+          cache: maven
+
+      - name: Build with Maven
+        run: mvn -B -ntp clean verify
+
+      - name: Upload surefire reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: '**/target/surefire-reports'
+          if-no-files-found: ignore
+
+  deploy:
+    name: Deploy sdk-core and starter
+    needs: build
+    if: (github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))) || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    env:
+      MAVEN_REPO_ID: ${{ secrets.MAVEN_REPO_ID }}
+      MAVEN_REPO_URL: ${{ secrets.MAVEN_REPO_URL }}
+      MAVEN_SNAPSHOT_URL: ${{ secrets.MAVEN_SNAPSHOT_URL }}
+      MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
+      MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 8 and Maven
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '8'
+          cache: maven
+
+      - name: Deploy with Maven
+        run: |
+          set -euo pipefail
+
+          REPO_ID="${MAVEN_REPO_ID:-github}"
+          REPO_URL="${MAVEN_REPO_URL:-https://maven.pkg.github.com/${GITHUB_REPOSITORY}}"
+          SNAPSHOT_URL="${MAVEN_SNAPSHOT_URL:-${REPO_URL}}"
+          REPO_USERNAME="${MAVEN_USERNAME:-${GITHUB_ACTOR}}"
+          REPO_PASSWORD="${MAVEN_PASSWORD:-${GITHUB_TOKEN}}"
+
+          mkdir -p "${HOME}/.m2"
+          cat > "${HOME}/.m2/settings.xml" <<EOF
+          <settings>
+            <servers>
+              <server>
+                <id>${REPO_ID}</id>
+                <username>${REPO_USERNAME}</username>
+                <password>${REPO_PASSWORD}</password>
+              </server>
+            </servers>
+          </settings>
+          EOF
+
+          mvn -B -ntp -Prelease clean deploy \
+            -Dmaven.repo.id="${REPO_ID}" \
+            -Dmaven.repo.url="${REPO_URL}" \
+            -Dmaven.repo.snapshotId="${REPO_ID}" \
+            -Dmaven.repo.snapshotUrl="${SNAPSHOT_URL}" \
+            -DskipTests \
+            -pl third-api-sdk-core,third-api-spring-boot-starter \
+            -am

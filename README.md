@@ -227,6 +227,76 @@ SQLite 端到端测试：
 bash scripts/e2e-sqlite.sh
 ```
 
+## 自动构建与 Maven 仓库发布
+
+GitHub Actions 工作流位于 [`.github/workflows/maven.yml`](.github/workflows/maven.yml)：
+
+- 每次 push 到 `main` 或提交 PR 时，自动执行 `mvn clean verify` 构建并运行测试
+- push 到 `main`、push `v*` 标签或手动触发工作流时，自动将 `third-api-sdk-core` 和 `third-api-spring-boot-starter` 发布到远端 Maven 仓库（父 POM 会一并发布）
+- 默认使用 GitHub Packages，地址为 `https://maven.pkg.github.com/wangzaogen/third-api`，无需额外 Secret，工作流使用 `GITHUB_TOKEN` 认证
+
+### 从 GitHub Packages 使用
+
+先在 `~/.m2/settings.xml` 中配置凭据，个人访问令牌需要 `read:packages` 权限：
+
+```xml
+<settings>
+  <servers>
+    <server>
+      <id>github</id>
+      <username>你的 GitHub 用户名</username>
+      <password>你的 personal access token</password>
+    </server>
+  </servers>
+</settings>
+```
+
+再在业务项目 `pom.xml` 中加入仓库和依赖：
+
+```xml
+<repositories>
+  <repository>
+    <id>github</id>
+    <url>https://maven.pkg.github.com/wangzaogen/third-api</url>
+    <snapshots>
+      <enabled>true</enabled>
+    </snapshots>
+  </repository>
+</repositories>
+
+<dependencies>
+  <dependency>
+    <groupId>com.thirdapi</groupId>
+    <artifactId>third-api-spring-boot-starter</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+  </dependency>
+</dependencies>
+```
+
+### 切换到 Nexus / 私服
+
+在 GitHub 仓库的 `Settings -> Secrets and variables -> Actions` 中配置以下 Secret，工作流会自动生成 `settings.xml` 并使用：
+
+| Secret | 说明 |
+|---|---|
+| `MAVEN_REPO_ID` | Maven server id，例如 `nexus-releases` |
+| `MAVEN_REPO_URL` | 正式版本仓库地址 |
+| `MAVEN_SNAPSHOT_URL` | 快照仓库地址，不填则使用 `MAVEN_REPO_URL` |
+| `MAVEN_USERNAME` | 仓库用户名 |
+| `MAVEN_PASSWORD` | 仓库密码或令牌 |
+
+本地手动发布时执行：
+
+```bash
+mvn -Prelease clean deploy \
+  -Dmaven.repo.id=nexus-releases \
+  -Dmaven.repo.url=https://your-nexus/repository/maven-releases/ \
+  -Dmaven.repo.snapshotId=nexus-snapshots \
+  -Dmaven.repo.snapshotUrl=https://your-nexus/repository/maven-snapshots/
+```
+
+若目标仓库是 Maven Central，还需要在 POM 中补充 `licenses`、`developers`、`scm` 等元数据，并配置 GPG 签名与 OSSRH 凭据。
+
 ## 开源协议
 
 本项目使用 MIT License，详见 [LICENSE](LICENSE)。
