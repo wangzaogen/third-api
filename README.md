@@ -12,6 +12,14 @@
 - 管理端包含应用、服务商、渠道、接口、鉴权、健康、审计、发布
 - 本地联调默认使用 SQLite，生产环境可切换 MySQL
 
+## 架构图
+
+业务系统通过 `@ThirdPartyApi` 声明式接口与动态代理统一调用第三方 HTTP 接口；配置由管理端长轮询下发，发布后无需重启即可热更新：
+
+![Third API 运行时架构](docs/architecture.png)
+
+- 可缩放矢量源文件：[docs/architecture.html](docs/architecture.html)
+
 ## 项目结构
 
 | 模块 | 说明 |

@@ -7,3 +7,6 @@ target/
 *.log
 *.db
 *.sqlite
+
+# pi 本地安装的包（Git 来源，可随时用 pi install 重新安装）
+.pi/
